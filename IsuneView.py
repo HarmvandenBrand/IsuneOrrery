@@ -17,6 +17,8 @@ from IsuneCalendar import Calendar, Hour
 
 
 
+SCENE_SIZE = 35
+
 
 class IsuneDashApp:
 
@@ -67,6 +69,21 @@ class IsuneDashApp:
 
             # important line, maintains user-adjusted camera view after figure update
             self.fig.layout.uirevision = 1
+            self.fig.layout.scene.aspectmode = 'cube'
+
+            # fix scene size
+            self.fig.layout.scene.xaxis.range = [-SCENE_SIZE, SCENE_SIZE]
+            self.fig.layout.scene.yaxis.range = [-SCENE_SIZE, SCENE_SIZE]
+            self.fig.layout.scene.zaxis.range = [-SCENE_SIZE, SCENE_SIZE]
+
+            # disable all axis information, except for a background in the xy-plane, which is kept as referencing point
+            self.fig.layout.scene.xaxis.visible = False
+            self.fig.layout.scene.yaxis.visible = False
+            self.fig.layout.scene.zaxis.visible = True
+            self.fig.layout.scene.zaxis.showticklabels = False
+            self.fig.layout.scene.zaxis.showaxeslabels = False
+            self.fig.layout.scene.zaxis.title = ""
+            self.fig.layout.scene.zaxis.showbackground = True
 
             # also an important line. First update will trigger camera position reset otherwise
             self.fig.update_layout(width=1200, height=800, autosize=False)

@@ -17,7 +17,6 @@ from IsuneView import IsuneDashApp
 - fix plane size independent of zoom level (maybe replace scatterplot with https://stackoverflow.com/questions/70977042/how-to-plot-spheres-in-3d-with-plotly-or-another-library)
 - host as github page
 - add month names to calendar
-- remove 3d "box" surrounding the data (but retain axes?)
 - graph loading spinner (https://dash.plotly.com/dash-core-components/loading)
 - set useful hover-tooltips for planes 
 '''
@@ -50,7 +49,7 @@ def get_isune_cosmology():
     uthos  = Plane("Uthos",  amplitude=INNER_PLANES_AMPLITUDE, inclination=0.0, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=4/8, color="#e8ac22", size=9)
     xidor  = Plane("Xidor",  amplitude=INNER_PLANES_AMPLITUDE, inclination=0.0, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=5/8, color="#888888", size=9)
     iraz   = Plane("Iraz",   amplitude=INNER_PLANES_AMPLITUDE, inclination=0.0, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=6/8, color="#ee0022", size=17)
-    baruta = Plane("Baruta", amplitude=INNER_PLANES_AMPLITUDE, inclination=0.0, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=7/8, color="#8c06ad", size=7)
+    baruta = Plane("Baruta", amplitude=INNER_PLANES_AMPLITUDE, inclination=0.0, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=7/8, color="#8c06ad", size=7, z_phase=0.25)
     material_planes = [veka, aspen, oshya, kipra, uthos, xidor, iraz, baruta]
 
     # Inner planes
