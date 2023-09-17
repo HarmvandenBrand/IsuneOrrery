@@ -48,100 +48,33 @@ class IsuneDashApp:
         df = pd.DataFrame(location_dict)
         df['color'] = [plane.color if plane.color is not None else '#dddddd' for plane in planes]
         df['name'] = [plane.name if plane.name is not None else 'None' for plane in planes]
+        df['size'] = [plane.size*2 for plane in planes]
 
         print(df)
 
         return df
 
 
-    def recalculate_fig(self):
+    def calculate_fig(self):
         df = self.planes_to_df(self.planes)
         scatter = go.Scatter3d(x=df['x'], y=df['y'], z=df['z'], text=df['name'], mode='markers', opacity=0.9)
 
         if self.fig is None:
             self.fig = go.Figure(data=scatter)
+
+            # add colors
+            self.fig.update_traces(marker=dict(color=df['color'], size=df['size']))
+
+            # important line, maintains user-adjusted camera view after figure update
+            self.fig.layout.uirevision = 1
+
+            # also an important line. First update will trigger camera position reset otherwise
+            self.fig.update_layout(width=1200, height=800, autosize=False)
+
         else:
-            self.fig.update_traces(scatter, overwrite=True)
+            self.fig = self.fig.update_traces(scatter, overwrite=False)
 
         return self.fig
-
-
-    def run_dash(self, planes: list[Plane]):
-
-        app = dash.Dash("Isune Astrolabe")
-
-        initial_data = [[*plane.location_from_hours(self.calendar.total_hours()), plane.color] for plane in planes]
-
-        initial_fig = px.scatter_3d(initial_data, x=0, y=1, z=2, size_max=18, opacity=0.7, color=3)
-        initial_fig.update_coloraxes(showscale=False)
-        initial_fig.update_layout(width=1200, height=800, autosize=False)
-
-        app.layout = html.Div(
-        [
-            dcc.Graph(id='updated-graph', figure=initial_fig),
-            dcc.Input(id='calendar-value', value='0', type='text'),
-            html.Button(children='update', id='update-button'),
-            html.Button(children='-1', id='minus-1-hour-button'),
-            html.Button(children='+1', id='plus-1-hour-button'),
-        ])
-
-        @app.callback(
-            Output('updated-graph', 'figure'),
-            [
-                Input('update-button', 'n_clicks'),
-                Input('minus-1-hour-button', 'n_clicks'),
-                Input('plus-1-hour-button', 'n_clicks')
-            ],
-            [
-                State('calendar-value', 'value')
-            ]
-        )
-        def update_figure(n_clicks_update, n_clicks_minus_1, n_clicks_plus_1, value):
-
-            if n_clicks_update is None and n_clicks_minus_1 is None and n_clicks_plus_1 is None:
-                return dash.no_update
-            else:
-
-                triggered_id = dash.ctx.triggered_id
-                print(triggered_id)
-                if triggered_id == 'update-button':
-                    self.parse_calendar(value)
-                elif triggered_id == 'minus-1-hour-button':
-                    self.calendar = self.calendar - Hour(1)
-                elif triggered_id == 'plus-1-hour-button':
-                    self.calendar = self.calendar + Hour(1)
-
-                # create data
-                hours = self.calendar.total_hours()
-                data = [[*plane.location_from_hours(hours), plane.color] for plane in planes]
-
-                fig = px.scatter_3d(data, x=0, y=1, z=2, size_max=18, opacity=0.7, color=3)
-                fig.update_coloraxes(showscale=False)
-                fig['layout']['uirevision'] = 0
-                print(fig.layout.uirevision)
-
-                app.layout['uirevision'] = 2
-
-                return fig
-
-                # data2 = [{
-                #     'x': [d[0] for d in data],
-                #     'y': [d[1] for d in data],
-                #     'z': [d[2] for d in data],
-                #     'color': [d[3] for d in data],
-                #     'name': 'pls'
-                # }]
-                #
-                #
-                # return {
-                #     'data': data2,
-                #     'layout': {
-                #         'uirevision': 'kek'
-                #     }
-                # }
-
-
-        app.run(debug=True)
 
 
     def run_dash_tutorial(self, planes: list[Plane]):
@@ -149,16 +82,7 @@ class IsuneDashApp:
         # Initialize the app
         app = dash.Dash("Isune Astrolabe")
 
-        df = self.planes_to_df(planes)
-
-        # initial_scatter = go.Scatter3d(x=df['x'], y=df['y'], z=df['z'], text=df['name'], mode='markers', opacity=0.9)
-        # self.fig = go.Figure(data=initial_scatter)
-        self.recalculate_fig()
-        self.fig.layout.uirevision = 1  # important line, maintains user-adjusted camera view after figure update
-
-
-        # add colors
-        self.fig.update_traces(marker=dict(color=df['color']))
+        self.calculate_fig()
 
         # App layout
         app.layout = html.Div(
@@ -169,7 +93,6 @@ class IsuneDashApp:
             html.Button(children='-1', id='minus-1-hour-button'),
             html.Button(children='+1', id='plus-1-hour-button'),
         ])
-
 
         @app.callback(
             Output('graph', 'figure'),
@@ -197,9 +120,7 @@ class IsuneDashApp:
                 elif triggered_id == 'plus-1-hour-button':
                     self.calendar = self.calendar + Hour(1)
 
-                print(self.fig)
-
-                self.recalculate_fig()
+                self.calculate_fig()
 
                 return self.fig
 

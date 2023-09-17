@@ -3,6 +3,8 @@ import math
 from typing_extensions import Self
 
 
+DEFAULT_PLANE_SIZE = 10
+
 
 class Astrolabe:
     pass
@@ -18,12 +20,13 @@ class Astrolabe:
 class Plane:
     # __slots__ = "name"
 
-    def __init__(self, name, amplitude: float, period_in_hours: int, phase: float, color: str):
+    def __init__(self, name, amplitude: float, period_in_hours: int, phase: float, color: str, size=DEFAULT_PLANE_SIZE):
         self.name = name
         self.amplitude = amplitude
         self.period_in_hours = period_in_hours
         self.phase = period_in_hours * phase  # phase is given as portion of single orbit and should be in [0, 1]
         self.color = color
+        self.size = size
 
     def location_at_date(self, date: Calendar) -> tuple[float, float, float]:
         return self.location_from_hours(date.total_hours())
