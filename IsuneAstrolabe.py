@@ -16,62 +16,42 @@ class Astrolabe:
 
 
 class Plane:
-    __slots__ = "name"
+    # __slots__ = "name"
 
-    def __init__(self, name):
+    def __init__(self, name, amplitude: float, period_in_hours: int, phase: float, color: str):
         self.name = name
+        self.amplitude = amplitude
+        self.period_in_hours = period_in_hours
+        self.phase = period_in_hours * phase  # phase is given as portion of single orbit and should be in [0, 1]
+        self.color = color
 
     def location_at_date(self, date: Calendar) -> tuple[float, float, float]:
         return self.location_from_hours(date.total_hours())
 
     def x_from_hours(self, hours: int) -> float:
-        amplitude = 10
-        period = 24
-        c = 0
-        d = 0
-        x = amplitude * math.cos((math.tau / period) * (hours - c)) + d
-        return x
+        return self.location_from_hours(hours)[0]
 
     def y_from_hours(self, hours: int) -> float:
-        amplitude = 10
-        period = 24
-        c = 0
-        d = 0
-        y = amplitude * math.sin((math.tau / period) * (hours - c)) + d
-        return y
+        return self.location_from_hours(hours)[1]
 
     def z_from_hours(self, hours: int) -> float:
-        return 0.0
+        return self.location_from_hours(hours)[2]
 
-    def distance_from(self, other: Self, date: Calendar):
+    def distance_from_other_plane(self, other: Self, date: Calendar):
         loc_self = self.location_at_date(date)
         loc_other = other.location_at_date(date)
         return math.dist(loc_self, loc_other)
 
-
-
     def location_from_hours(self, hours: int) -> tuple[float, float, float]:
         """input in uren"""
 
-        amplitude = 10
-        period = 24
-        c = 0
-        d = 0
-
         # sample function for perfectly flat orbit
-        z = 0
-        x = amplitude * math.cos((math.tau / period) * (hours - c)) + d
-        y = amplitude * math.sin((math.tau / period) * (hours - c)) + d
-
-        # f(x) = a * sin( b * (x - c)) + d
-        # a = amplitude
-        # b = 2pi/periode
-        # c = offset
-        # d = equilibrium
-        # (c,d) = starting point
+        z = 0.0
+        x = self.amplitude * math.cos((math.tau / self.period_in_hours) * (hours - self.phase))  # + d  (d term only necessary if not orbiting center)
+        y = self.amplitude * math.sin((math.tau / self.period_in_hours) * (hours - self.phase))
 
         # alternatively:
-            # De algemene vorm van een sinusoïdale functie van tijd is:   f(t) = a * cos (ω t + ϕ)
+            # f(t) = a * cos (ω t + ϕ)
             # met ω > 0 de hoekfrequentie,
             # a > 0 de amplitude,
             # ϕ de fase
