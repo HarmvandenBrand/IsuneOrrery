@@ -6,10 +6,11 @@ from typing_extensions import Self
 DEFAULT_PLANE_SIZE = 10
 
 
-class Astrolabe:
+class Orrery:
     pass
 
     # arcane core is at (0,0,0)
+    # reference plane is the (x,y) plane and is defined as the ecliptic plane for all material planes
 
     # Each plane has a unique biome and terrain, which results in a different climate dedicated to it.
     # There is also a central divide of hemispheres within the axis of material planes.
@@ -20,9 +21,10 @@ class Astrolabe:
 class Plane:
     # __slots__ = "name"
 
-    def __init__(self, name, amplitude: float, period_in_hours: int, phase: float, color: str, size=DEFAULT_PLANE_SIZE):
+    def __init__(self, name, amplitude: float, inclination: float, period_in_hours: int, phase: float, color: str, size=DEFAULT_PLANE_SIZE):
         self.name = name
         self.amplitude = amplitude
+        self.inclination = inclination  # INCOMPLETE inclination is in the range [0,1]
         self.period_in_hours = period_in_hours
         self.phase = period_in_hours * phase  # phase is given as portion of single orbit and should be in [0, 1]
         self.color = color
@@ -49,9 +51,10 @@ class Plane:
         """input in uren"""
 
         # sample function for perfectly flat orbit
-        z = 0.0
         x = self.amplitude * math.cos((math.tau / self.period_in_hours) * (hours - self.phase))  # + d  (d term only necessary if not orbiting center)
         y = self.amplitude * math.sin((math.tau / self.period_in_hours) * (hours - self.phase))
+        z = self.amplitude * math.sin((math.tau / self.period_in_hours) * (hours - self.phase)) * self.inclination
+
 
         # alternatively:
             # f(t) = a * cos (ω t + ϕ)

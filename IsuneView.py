@@ -8,7 +8,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 
-from IsuneAstrolabe import Plane
+from IsuneOrrery import Plane
 from IsuneCalendar import Calendar, Hour
 
 # def add_bounding_points(fig: Figure):
