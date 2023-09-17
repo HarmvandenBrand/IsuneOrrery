@@ -48,7 +48,7 @@ class IsuneDashApp:
         df = pd.DataFrame(location_dict)
         df['color'] = [plane.color if plane.color is not None else '#dddddd' for plane in planes]
         df['name'] = [plane.name if plane.name is not None else 'None' for plane in planes]
-        df['size'] = [plane.size*2 for plane in planes]
+        df['size'] = [int(plane.size*1.5) for plane in planes]
 
         print(df)
 
