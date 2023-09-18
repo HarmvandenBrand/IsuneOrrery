@@ -21,7 +21,7 @@ class Orrery:
 class Plane:
     # __slots__ = "name"
 
-    def __init__(self, name, amplitude: float, inclination: float, period_in_hours: int, phase: float, color: str, size=DEFAULT_PLANE_SIZE):
+    def __init__(self, name, amplitude: float, inclination: float, period_in_hours: int, phase: float, color: str, size=DEFAULT_PLANE_SIZE, z_phase=0.0):
         self.name = name
         self.amplitude = amplitude
         self.inclination = inclination  # INCOMPLETE inclination is in the range [0,1]
@@ -29,6 +29,7 @@ class Plane:
         self.phase = period_in_hours * phase  # phase is given as portion of single orbit and should be in [0, 1]
         self.color = color
         self.size = size
+        self.z_phase = period_in_hours * z_phase
 
     def location_at_date(self, date: Calendar) -> tuple[float, float, float]:
         return self.location_from_hours(date.total_hours())
@@ -50,11 +51,15 @@ class Plane:
     def location_from_hours(self, hours: int) -> tuple[float, float, float]:
         """input in uren"""
 
-        # sample function for perfectly flat orbit
-        x = self.amplitude * math.cos((math.tau / self.period_in_hours) * (hours - self.phase))  # + d  (d term only necessary if not orbiting center)
-        y = self.amplitude * math.sin((math.tau / self.period_in_hours) * (hours - self.phase))
-        z = self.amplitude * math.sin((math.tau / self.period_in_hours) * (hours - self.phase)) * self.inclination
+        xy_theta = (math.tau / self.period_in_hours) * (hours - self.phase)
+        # z_theta = (math.tau / self.period_in_hours) * (hours - self.z_phase)
 
+
+        # sample function for perfectly flat orbit
+        x = self.amplitude * math.cos(xy_theta)  # + d  (d term only necessary if not orbiting center)
+        y = self.amplitude * math.sin(xy_theta)
+        # z = self.amplitude * math.sin(z_theta) * math.cos(self.inclination)
+        z = 0.0
 
         # alternatively:
             # f(t) = a * cos (ω t + ϕ)

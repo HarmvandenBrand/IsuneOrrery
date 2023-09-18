@@ -1,20 +1,13 @@
 import dash
-import plotly.graph_objects
 from dash import dcc
 from dash import html
 from dash.dependencies import Output, State, Input
 
-import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 
 from IsuneOrrery import Plane
 from IsuneCalendar import Calendar, Hour
-
-# def add_bounding_points(fig: Figure):
-#     fig.add_scatter3d()
-
-
 
 
 SCENE_SIZE = 35
@@ -94,7 +87,7 @@ class IsuneDashApp:
         return self.fig
 
 
-    def run_dash_tutorial(self, planes: list[Plane]):
+    def get_app(self, planes: list[Plane]):
 
         # Initialize the app
         app = dash.Dash("Isune Astrolabe")
@@ -141,4 +134,5 @@ class IsuneDashApp:
 
                 return self.fig
 
-        app.run(debug=True)
+        # app.run(debug=True)
+        return app

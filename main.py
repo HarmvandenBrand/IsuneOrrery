@@ -1,9 +1,3 @@
-# This is a sample Python script.
-import sys
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
 from IsuneCalendar import Calendar, Year, Month, Day, Hour
 from IsuneOrrery import Plane
 from IsuneView import IsuneDashApp
@@ -20,6 +14,7 @@ from IsuneView import IsuneDashApp
 - graph loading spinner (https://dash.plotly.com/dash-core-components/loading)
 - set useful hover-tooltips for planes 
 '''
+
 
 def get_isune_cosmology():
 
@@ -76,17 +71,16 @@ def get_isune_cosmology():
 
     return planes
 
-
-if __name__ == '__main__':
-
-    cal0 = Calendar(0, 1, 1, 0)
-    cal3 = Calendar(12, 12, 29, 0)
-    cal4 = Calendar(0, 1, 1, 1)
-
-    print(cal3.total_hours())
+def initialize():
 
     planes = get_isune_cosmology()
-
     isune_dash = IsuneDashApp(planes)
-    isune_dash.run_dash_tutorial(planes)
+    app = isune_dash.get_app(planes)
+
+    return app
+
+if __name__ == "__main__":
+    app = initialize()
+    app.run(debug=True)
+
 
