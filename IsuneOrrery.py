@@ -1,6 +1,5 @@
 from IsuneCalendar import Calendar, Year, Month, Day, Hour
 import math
-from typing_extensions import Self
 
 
 DEFAULT_PLANE_SIZE = 10
@@ -43,7 +42,7 @@ class Plane:
     def z_from_hours(self, hours: int) -> float:
         return self.location_from_hours(hours)[2]
 
-    def distance_from_other_plane(self, other: Self, date: Calendar):
+    def distance_from_other_plane(self, other: 'Plane', date: Calendar):
         loc_self = self.location_at_date(date)
         loc_other = other.location_at_date(date)
         return math.dist(loc_self, loc_other)

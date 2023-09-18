@@ -1,5 +1,4 @@
 import math
-from typing_extensions import Self
 
 
 class Calendar:
@@ -46,7 +45,7 @@ class Calendar:
         self.months = self.months % Calendar.NUM_MONTHS_IN_YEAR
         self.years += excess_years
 
-    def __add__(self, other) -> Self:
+    def __add__(self, other) -> 'Calendar':
         if isinstance(other, Calendar):
             y = self.years + other.years
             m = self.month() + other.month()
@@ -68,7 +67,7 @@ class Calendar:
 
         return cal
 
-    def __sub__(self, other) -> Self:
+    def __sub__(self, other) -> 'Calendar':
         if isinstance(other, Calendar):
             return self + Calendar(-other.years, -other.months, -other.days, -other.hours)
         elif isinstance(other, Year):
