@@ -97,27 +97,53 @@ class IsuneDashApp:
         # App layout
         app.layout = html.Div(
         [
+            html.Div(id='current-date-div', children=str(self.calendar)),
             dcc.Graph(id='graph', figure=self.fig),
             dcc.Input(id='calendar-field', value='0000/01/01 00:00', type='text'),
             html.Button(children='update', id='update-button'),
             html.Button(children='-1', id='minus-1-hour-button'),
             html.Button(children='+1', id='plus-1-hour-button'),
+            html.Button(children="►", id='play-button'),
+            dcc.Interval(id='interval-component', interval=1 * 1000, n_intervals=0, disabled=True)  # interval is in milliseconds, disabled=True so it begins inactive
         ])
 
+
+        @app.callback(
+            Output('interval-component', 'disabled'),
+            Output('play-button', 'children'),
+            [
+                Input('play-button', 'n_clicks')
+            ],
+            [
+                State('interval-component', 'disabled')
+            ]
+        )
+        def toggle_interval(button_clicks, disabled_state):
+            if button_clicks is not None and button_clicks > 0:
+                if disabled_state:
+                    return not disabled_state, "||"
+                else:
+                    return not disabled_state, "►"
+            else:
+                return disabled_state, "►"
+
+        # Callback for the manipulation of buttons
         @app.callback(
             Output('graph', 'figure'),
+            Output('current-date-div', 'children'),
             [
                 Input('update-button', 'n_clicks'),
                 Input('minus-1-hour-button', 'n_clicks'),
-                Input('plus-1-hour-button', 'n_clicks')
+                Input('plus-1-hour-button', 'n_clicks'),
+                Input('interval-component', 'n_intervals')
             ],
             [
                 State('calendar-field', 'value')
             ]
         )
-        def update_figure(n_clicks_update, n_clicks_minus_1, n_clicks_plus_1, value):
+        def update_figure(n_clicks_update, n_clicks_minus_1, n_clicks_plus_1, n_intervals, value):
 
-            if n_clicks_update is None and n_clicks_minus_1 is None and n_clicks_plus_1 is None:
+            if n_clicks_update is None and n_clicks_minus_1 is None and n_clicks_plus_1 is None and n_intervals is None:
                 return dash.no_update
             else:
 
@@ -129,10 +155,13 @@ class IsuneDashApp:
                     self.calendar = self.calendar - Hour(1)
                 elif triggered_id == 'plus-1-hour-button':
                     self.calendar = self.calendar + Hour(1)
+                elif triggered_id == 'interval-component':
+                    self.calendar = self.calendar + Hour(1)
+
 
                 self.calculate_fig()
 
-                return self.fig
+                return self.fig, str(self.calendar)
 
         # app.run(debug=True)
         return app

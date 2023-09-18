@@ -6,12 +6,12 @@ from IsuneView import IsuneDashApp
 '''
 - add option to incline plane axis
 - add other planes
-- add html element for displaying current date
 - fix plane size independent of zoom level (maybe replace scatterplot with https://stackoverflow.com/questions/70977042/how-to-plot-spheres-in-3d-with-plotly-or-another-library)
-- host as github page
 - add month names to calendar
+- fix issue where camera can't be dragged and figure won't be updated during animation (i.e. when interval is enabled)
 - graph loading spinner (https://dash.plotly.com/dash-core-components/loading)
 - set useful hover-tooltips for planes 
+- beautify layout (e.g. reposition and css the current date)
 '''
 
 
