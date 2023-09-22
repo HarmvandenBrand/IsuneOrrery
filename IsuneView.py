@@ -104,7 +104,7 @@ class IsuneDashApp:
             html.Button(children='-1', id='minus-1-hour-button'),
             html.Button(children='+1', id='plus-1-hour-button'),
             html.Button(children="►", id='play-button'),
-            dcc.Interval(id='interval-component', interval=1 * 1000, n_intervals=0, disabled=True)  # interval is in milliseconds, disabled=True so it begins inactive
+            dcc.Interval(id='interval-component', interval=0.1 * 1000, n_intervals=0, disabled=True)  # interval is in milliseconds, disabled=True so it begins inactive
         ])
 
 

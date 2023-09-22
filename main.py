@@ -1,14 +1,15 @@
-from IsuneOrrery import Plane
+from IsuneOrrery import Plane, Orbit
 from IsuneView import IsuneDashApp
 
 
 ##### TODO #####
 '''
-- add option to incline plane axis
 - add other planes
 - fix plane size independent of zoom level (maybe replace scatterplot with https://stackoverflow.com/questions/70977042/how-to-plot-spheres-in-3d-with-plotly-or-another-library)
 - add month names to calendar
+- make calendar date client-side instead of server-side
 - fix issue where camera can't be dragged and figure won't be updated during animation (i.e. when interval is enabled)
+- Op data vóór 0/0/0, alle planeten deleten en replacen met Ven'ron?
 - graph loading spinner (https://dash.plotly.com/dash-core-components/loading)
 - set useful hover-tooltips for planes 
 - beautify layout (e.g. reposition and css the current date)
@@ -32,18 +33,22 @@ def get_isune_cosmology():
     OUTER_PLANES_SIZE = 15
 
 
+    arcane_core_orbit = Orbit(rotational_axis=[0.0, 0.0, 1.0], amplitude=0.0)
+    material_planes_orbit = Orbit(rotational_axis=[0.0, 0.0, 1.0], amplitude=INNER_PLANES_AMPLITUDE)  # ecliptical plane
+    outer_planes_orbit = Orbit(rotational_axis=[1.0, 1.0, 1.0], amplitude=OUTER_PLANES_AMPLITUDE)
+
     # The arcane core
-    arcane_core = Plane("Arcane Core", amplitude=0, inclination=0, period_in_hours=1, phase=0.0, color="#ffff99", size=30)
+    arcane_core = Plane("Arcane Core", orbit=arcane_core_orbit, period_in_hours=1, phase=0.0, color="#ffff99", size=30)
 
     # Material planes
-    veka   = Plane("Veka",   amplitude=INNER_PLANES_AMPLITUDE, inclination=0.0, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=0/8, color="#54d3ab", size=20)
-    aspen  = Plane("Aspen",  amplitude=INNER_PLANES_AMPLITUDE, inclination=0.0, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=1/8, color="#41acc1", size=8)
-    oshya  = Plane("Oshya",  amplitude=INNER_PLANES_AMPLITUDE, inclination=0.0, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=2/8, color="#4175c1", size=11)
-    kipra  = Plane("Kipra",  amplitude=INNER_PLANES_AMPLITUDE, inclination=0.0, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=3/8, color="#79c141", size=18)
-    uthos  = Plane("Uthos",  amplitude=INNER_PLANES_AMPLITUDE, inclination=0.0, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=4/8, color="#e8ac22", size=9)
-    xidor  = Plane("Xidor",  amplitude=INNER_PLANES_AMPLITUDE, inclination=0.0, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=5/8, color="#888888", size=9)
-    iraz   = Plane("Iraz",   amplitude=INNER_PLANES_AMPLITUDE, inclination=0.0, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=6/8, color="#ee0022", size=17)
-    baruta = Plane("Baruta", amplitude=INNER_PLANES_AMPLITUDE, inclination=0.0, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=7/8, color="#8c06ad", size=7, z_phase=0.25)
+    veka   = Plane("Veka",   orbit=material_planes_orbit, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=0/8, color="#54d3ab", size=20)
+    aspen  = Plane("Aspen",  orbit=material_planes_orbit, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=1/8, color="#41acc1", size=8)
+    oshya  = Plane("Oshya",  orbit=material_planes_orbit, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=2/8, color="#4175c1", size=11)
+    kipra  = Plane("Kipra",  orbit=material_planes_orbit, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=3/8, color="#79c141", size=18)
+    uthos  = Plane("Uthos",  orbit=material_planes_orbit, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=4/8, color="#e8ac22", size=9)
+    xidor  = Plane("Xidor",  orbit=material_planes_orbit, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=5/8, color="#888888", size=9)
+    iraz   = Plane("Iraz",   orbit=material_planes_orbit, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=6/8, color="#ee0022", size=17)
+    baruta = Plane("Baruta", orbit=material_planes_orbit, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=7/8, color="#8c06ad", size=7)
     material_planes = [veka, aspen, oshya, kipra, uthos, xidor, iraz, baruta]
 
     # Inner planes
@@ -51,17 +56,17 @@ def get_isune_cosmology():
         # Feywild/Shadowfell plane
 
     # Outer planes
-    mount_delestia = Plane("Mount Delestia", amplitude=OUTER_PLANES_AMPLITUDE, inclination=OUTER_PLANES_INCLINATION, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES,
+    mount_delestia = Plane("Mount Delestia", orbit=outer_planes_orbit, period_in_hours=PERIOD_IN_HOURS_OUTER_PLANES,
         phase=2/8, color=OUTER_PLANES_COLOR, size=OUTER_PLANES_SIZE)
-    elysium = Plane("Elysium",               amplitude=OUTER_PLANES_AMPLITUDE, inclination=OUTER_PLANES_INCLINATION, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES,
+    elysium = Plane("Elysium",               orbit=outer_planes_orbit, period_in_hours=PERIOD_IN_HOURS_OUTER_PLANES,
         phase=3/8, color=OUTER_PLANES_COLOR, size=OUTER_PLANES_SIZE)
-    the_beastlands = Plane("The Beastlands", amplitude=OUTER_PLANES_AMPLITUDE, inclination=OUTER_PLANES_INCLINATION, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES,
+    the_beastlands = Plane("The Beastlands", orbit=outer_planes_orbit, period_in_hours=PERIOD_IN_HOURS_OUTER_PLANES,
         phase=4/8, color=OUTER_PLANES_COLOR, size=OUTER_PLANES_SIZE)
-    limbo = Plane("Limbo",                   amplitude=OUTER_PLANES_AMPLITUDE, inclination=OUTER_PLANES_INCLINATION, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES,
+    limbo = Plane("Limbo",                   orbit=outer_planes_orbit, period_in_hours=PERIOD_IN_HOURS_OUTER_PLANES,
         phase=5/8, color=OUTER_PLANES_COLOR, size=OUTER_PLANES_SIZE)
-    the_abyss = Plane("The Abyss",           amplitude=OUTER_PLANES_AMPLITUDE, inclination=OUTER_PLANES_INCLINATION, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES,
+    the_abyss = Plane("The Abyss",           orbit=outer_planes_orbit, period_in_hours=PERIOD_IN_HOURS_OUTER_PLANES,
         phase=6/8, color=OUTER_PLANES_COLOR, size=OUTER_PLANES_SIZE)
-    the_nine_hells = Plane("The Nine Hells", amplitude=OUTER_PLANES_AMPLITUDE, inclination=OUTER_PLANES_INCLINATION, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES,
+    the_nine_hells = Plane("The Nine Hells", orbit=outer_planes_orbit, period_in_hours=PERIOD_IN_HOURS_OUTER_PLANES,
         phase=7/8, color=OUTER_PLANES_COLOR, size=OUTER_PLANES_SIZE)
 
     outer_planes = [mount_delestia, elysium, the_beastlands, limbo, the_abyss, the_nine_hells]
