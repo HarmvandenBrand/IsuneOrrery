@@ -39,7 +39,7 @@ class IsuneDashApp:
 
     def planes_to_df(self, planes: list[Plane]):
         locations = [[*plane.location_from_hours(self.calendar.total_hours())] for plane in planes]
-        location_dict = {'x':[v[0] for v in locations], 'y':[v[1] for v in locations], 'z':[v[2] for v in locations]}
+        location_dict = {'x': [v[0] for v in locations], 'y': [v[1] for v in locations], 'z': [v[2] for v in locations]}
         df = pd.DataFrame(location_dict)
         df['color'] = [plane.color if plane.color is not None else '#dddddd' for plane in planes]
         df['name'] = [plane.name if plane.name is not None else 'None' for plane in planes]
@@ -104,7 +104,7 @@ class IsuneDashApp:
             html.Button(children='-1', id='minus-1-hour-button'),
             html.Button(children='+1', id='plus-1-hour-button'),
             html.Button(children="►", id='play-button'),
-            dcc.Interval(id='interval-component', interval=0.1 * 1000, n_intervals=0, disabled=True)  # interval is in milliseconds, disabled=True so it begins inactive
+            dcc.Interval(id='interval-component', interval=0.5 * 1000, n_intervals=0, disabled=True)  # interval is in milliseconds, disabled=True so it begins inactive
         ])
 
 
