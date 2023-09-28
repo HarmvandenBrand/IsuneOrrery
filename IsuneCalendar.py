@@ -81,8 +81,20 @@ class Calendar:
         else:
             raise NotImplementedError(f"Unsupported type for subtraction from Calendar: {type(other)}")
 
-    # def __neg__(self) -> Self:
-    #     return Calendar(-self.years, -self.months, -self.days, -self.hours)
+    def __lt__(self, other):
+        # Only __lt__ is implemented because < and > operators need only one of these functions to be implemented and defining __gt__ would in essence be duplicate code.
+        if not isinstance(other, Calendar):
+            raise NotImplementedError(f"Calendar objects should only be compared to other calendar objects, not to {type(other)} objects.")
+        if self.years == other.years:
+            if self.months == other.months:
+                if self.days == other.days:
+                    return self.hours < other.hours
+                else:
+                    return self.days < other.days
+            else:
+                return self.months < other.months
+        else:
+            return self.years < other.years
 
     def year(self) -> int:
         return self.years
