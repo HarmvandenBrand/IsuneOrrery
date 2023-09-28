@@ -38,6 +38,13 @@ class IsuneDashApp:
             self.calendar = Calendar(years=years, months=months, days=days, hours=hours)
 
     def planes_to_df(self, planes: list[Plane]):
+        """Orders calculation of the current state of the orrery and creates a dataframe from that data.
+        This function assumes the calendar date has already been correctly set."""
+
+        # Delete all planes before the zero date and display only Venron
+        if self.calendar < Calendar(0, 1, 1, 0):
+            planes = [Plane("Ven'ron", orbit=None, period_in_hours=10, phase=0.0, color="#bbbbee", size=45)]
+
         locations = [[*plane.location_from_hours(self.calendar.total_hours())] for plane in planes]
         location_dict = {'x': [v[0] for v in locations], 'y': [v[1] for v in locations], 'z': [v[2] for v in locations]}
         df = pd.DataFrame(location_dict)

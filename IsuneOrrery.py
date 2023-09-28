@@ -1,3 +1,5 @@
+from typing import Optional
+
 from IsuneCalendar import Calendar, Year, Month, Day, Hour
 import math
 import numpy as np
@@ -20,9 +22,9 @@ class Orrery:
 class Plane:
     # __slots__ = "name"
 
-    def __init__(self, name, orbit: 'Orbit', period_in_hours: int, phase: float, color: str, size=DEFAULT_PLANE_SIZE):
+    def __init__(self, name, orbit: Optional['Orbit'], period_in_hours: int, phase: float, color: str, size=DEFAULT_PLANE_SIZE):
         self.name = name
-        self.orbit = orbit
+        self.orbit = orbit if orbit is not None else Orbit.NULL_ORBIT
         self.period_in_hours = period_in_hours
         self.phase = period_in_hours * phase  # phase is given as portion of single orbit and should be in [0, 1]
         self.color = color
@@ -76,6 +78,7 @@ class Plane:
 
 class Orbit:
 
+
     def __init__(self, rotational_axis: list[float, float, float], amplitude: float, eccentricity=1.0, center=[0, 0, 0]):
 
         self.rotational_axis = rotational_axis / np.linalg.norm(rotational_axis)
@@ -84,6 +87,7 @@ class Orbit:
         self.center = np.asarray(center)
 
         self._orthogonal_axis_a, self._orthogonal_axis_b = self._create_orbit_vectors(self.rotational_axis)
+
 
     def _create_orbit_vectors(self, rotational_axis_vector: np.ndarray):
 
@@ -109,3 +113,6 @@ class Orbit:
         z = self.amplitude/c * math.cos(theta) * a[2] + self.amplitude/d * math.sin(theta) * b[2]
 
         return x, y, z
+
+
+Orbit.NULL_ORBIT = Orbit(rotational_axis=[0.0, 0.0, 1.0], amplitude=0.0)

@@ -33,12 +33,11 @@ def get_isune_cosmology():
     OUTER_PLANES_SIZE = 15
 
 
-    arcane_core_orbit = Orbit(rotational_axis=[0.0, 0.0, 1.0], amplitude=0.0)
     material_planes_orbit = Orbit(rotational_axis=[0.0, 0.0, 1.0], amplitude=INNER_PLANES_AMPLITUDE)  # ecliptical plane
     outer_planes_orbit = Orbit(rotational_axis=[1.0, 1.0, 1.0], amplitude=OUTER_PLANES_AMPLITUDE)
 
     # The arcane core
-    arcane_core = Plane("Arcane Core", orbit=arcane_core_orbit, period_in_hours=1, phase=0.0, color="#ffff99", size=30)
+    arcane_core = Plane("Arcane Core", orbit=None, period_in_hours=1, phase=0.0, color="#ffff99", size=30)
 
     # Material planes
     veka   = Plane("Veka",   orbit=material_planes_orbit, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=0/8, color="#54d3ab", size=20)
