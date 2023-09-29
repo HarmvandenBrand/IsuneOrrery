@@ -6,18 +6,25 @@ from dash.dependencies import Output, State, Input
 import plotly.graph_objects as go
 import pandas as pd
 
-from IsuneOrrery import Plane
+from IsuneOrrery import Plane, Orbit
 from IsuneCalendar import Calendar, Hour
 
 
 SCENE_SIZE = 35
 
+TEST_ORBIT = Orbit(rotational_axis=[0.0, 0.0, 1.0], amplitude=20)
+TEST_PLANES = [Plane("Test", orbit=TEST_ORBIT, period_in_hours=24 * 8, phase=0 / 8, color="#010101", size=20)]
+
+SLICE_ORBIT_OPACITY = 0.5
+
 
 class IsuneDashApp:
 
-    def __init__(self, planes: list[Plane], calendar=Calendar(0,1,1,0)):
+    def __init__(self, planes: list[Plane], slice_planes=None, calendar=Calendar(0,1,1,0)):
         self.calendar = calendar
         self.planes = planes
+        self.slice_planes = slice_planes
+        # self.swarm_planes = swarm_planes
         self.fig = None
 
     def parse_calendar(self, calendar_string: str) -> Calendar:
@@ -42,6 +49,7 @@ class IsuneDashApp:
         This function assumes the calendar date has already been correctly set."""
 
         # Delete all planes before the zero date and display only Venron
+        # TODO: refactor this model logic away from the view
         if self.calendar < Calendar(0, 1, 1, 0):
             planes = [Plane("Ven'ron", orbit=None, period_in_hours=10, phase=0.0, color="#bbbbee", size=45)]
 
@@ -52,20 +60,44 @@ class IsuneDashApp:
         df['name'] = [plane.name if plane.name is not None else 'None' for plane in planes]
         df['size'] = [int(plane.size*1.5) for plane in planes]
 
-        print(df)
+        return df
+
+
+    def plane_slice_to_df(self, plane: Plane, phase_offset_minus, phase_offset_plus):
+        locations = [*plane.location_slice_from_hours(self.calendar.total_hours(), phase_offset_minus, phase_offset_plus, 50)]
+        location_dict = {'x': [v[0] for v in locations], 'y': [v[1] for v in locations], 'z': [v[2] for v in locations]}
+        df = pd.DataFrame(location_dict)
+        df['color'] = plane.color if plane.color is not None else '#dddddd'
+        df['name'] = plane.name if plane.name is not None else 'None'
+        df['size'] = int(plane.size*1.5)
 
         return df
 
 
     def calculate_fig(self):
         df = self.planes_to_df(self.planes)
-        scatter = go.Scatter3d(x=df['x'], y=df['y'], z=df['z'], text=df['name'], mode='markers', opacity=0.9)
+        scatter = go.Scatter3d(x=df['x'], y=df['y'], z=df['z'], text=df['name'], mode='markers', opacity=0.9, name="Material Planes")
+
+        feywild_df = self.plane_slice_to_df(self.slice_planes[0], 0.24, 0.24)
+        feywild_scatter = go.Scatter3d(x=feywild_df['x'], y=feywild_df['y'], z=feywild_df['z'], text=feywild_df['name'], marker=dict(opacity=0.0), line=dict(width=feywild_df['size'][0], color=feywild_df['color'][0]), name=feywild_df['name'][0], opacity=SLICE_ORBIT_OPACITY, hovertemplate='%{text}<extra></extra>')
+
+        shadowfell_df = self.plane_slice_to_df(self.slice_planes[1], 0.24, 0.24)
+        shadowfell_scatter = go.Scatter3d(x=shadowfell_df['x'], y=shadowfell_df['y'], z=shadowfell_df['z'], text=shadowfell_df['name'], marker=dict(opacity=0.0), line=dict(width=shadowfell_df['size'][0], color=shadowfell_df['color'][0]), name=shadowfell_df['name'][0], opacity=SLICE_ORBIT_OPACITY, hovertemplate='%{text}<extra></extra>')
+
+        # test_df = self.planes_to_df(TEST_PLANES)
+        # test_scatter = go.Scatter3d(x=test_df['x'], y=test_df['y'], z=test_df['z'], text=test_df['name'], mode='markers', opacity=0.9, name="FeyFell", hoverinfo='skip')  # Note the "hoverinfo='skip'"
 
         if self.fig is None:
             self.fig = go.Figure(data=scatter)
+            self.fig.add_trace(feywild_scatter)
+            self.fig.add_trace(shadowfell_scatter)
 
-            # add colors
-            self.fig.update_traces(marker=dict(color=df['color'], size=df['size']))
+            # add individual colors for material plane
+            self.fig.update_traces(marker=dict(color=df['color'], size=df['size']), selector=dict(name="Material Planes"))
+
+            # Test stuff
+            # self.fig.add_trace(test_scatter)
+            # self.fig.update_traces(marker=dict(color=test_df['color'], size=test_df['size']), selector=dict(name="FeyFell"))
 
             # important line, maintains user-adjusted camera view after figure update
             self.fig.layout.uirevision = 1
@@ -89,7 +121,10 @@ class IsuneDashApp:
             self.fig.update_layout(width=1200, height=800, autosize=False)
 
         else:
-            self.fig = self.fig.update_traces(scatter, overwrite=False)
+            self.fig = self.fig.update_traces(scatter, selector=dict(name="Material Planes"), overwrite=False)
+            # self.fig = self.fig.update_traces(test_scatter, selector=dict(name="FeyFell"), overwrite=False)
+            self.fig = self.fig.update_traces(feywild_scatter, selector=dict(name="Feywild"), overwrite=False)
+            self.fig = self.fig.update_traces(shadowfell_scatter, selector=dict(name="Shadowfell"), overwrite=False)
 
         return self.fig
 
@@ -170,5 +205,4 @@ class IsuneDashApp:
 
                 return self.fig, str(self.calendar)
 
-        # app.run(debug=True)
         return app

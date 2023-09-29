@@ -4,15 +4,16 @@ from IsuneView import IsuneDashApp
 
 ##### TODO #####
 '''
-- add other planes
+- add ethereal plane (swarm of cone plots?)
 - fix plane size independent of zoom level (maybe replace scatterplot with https://stackoverflow.com/questions/70977042/how-to-plot-spheres-in-3d-with-plotly-or-another-library)
 - add month names to calendar
 - make calendar date client-side instead of server-side
 - fix issue where camera can't be dragged and figure won't be updated during animation (i.e. when interval is enabled)
-- Op data vóór 0/0/0, alle planeten deleten en replacen met Ven'ron?
 - graph loading spinner (https://dash.plotly.com/dash-core-components/loading)
-- set useful hover-tooltips for planes 
+- Remove trace info on hover for material and outer planes
+- Put outer planes in different trace
 - beautify layout (e.g. reposition and css the current date)
+- refactor Ven'ron logic
 '''
 
 
@@ -35,9 +36,10 @@ def get_isune_cosmology():
 
     material_planes_orbit = Orbit(rotational_axis=[0.0, 0.0, 1.0], amplitude=INNER_PLANES_AMPLITUDE)  # ecliptical plane
     outer_planes_orbit = Orbit(rotational_axis=[1.0, 1.0, 1.0], amplitude=OUTER_PLANES_AMPLITUDE)
+    feyfell_orbit = Orbit(rotational_axis=[1.0, 0.0, 0.6], amplitude=INNER_PLANES_AMPLITUDE)
 
     # The arcane core
-    arcane_core = Plane("Arcane Core", orbit=None, period_in_hours=1, phase=0.0, color="#ffff99", size=30)
+    arcane_core = Plane("Arcane Core", orbit=None, period_in_hours=1, phase=0.0, color="#ffff99", size=25)
 
     # Material planes
     veka   = Plane("Veka",   orbit=material_planes_orbit, period_in_hours=PERIOD_IN_HOURS_MATERIAL_PLANES, phase=0/8, color="#54d3ab", size=20)
@@ -51,8 +53,12 @@ def get_isune_cosmology():
     material_planes = [veka, aspen, oshya, kipra, uthos, xidor, iraz, baruta]
 
     # Inner planes
-        # Ethereal plane
-        # Feywild/Shadowfell plane
+    # - Ethereal plane
+
+    # Feyfell
+    feywild = Plane("Feywild", orbit=feyfell_orbit, period_in_hours=PERIOD_IN_HOURS_OTHER_INNER_PLANES, phase=0.0, color="#dba1e0", size=20)
+    shadowfell = Plane("Shadowfell", orbit=feyfell_orbit, period_in_hours=PERIOD_IN_HOURS_OTHER_INNER_PLANES, phase=0.5, color="#7f7f7f", size=20)
+    feyfell = [feywild, shadowfell]
 
     # Outer planes
     mount_delestia = Plane("Mount Delestia", orbit=outer_planes_orbit, period_in_hours=PERIOD_IN_HOURS_OUTER_PLANES,
@@ -70,17 +76,19 @@ def get_isune_cosmology():
 
     outer_planes = [mount_delestia, elysium, the_beastlands, limbo, the_abyss, the_nine_hells]
 
-    planes = [arcane_core, *material_planes, *outer_planes]
+    planes = [arcane_core, *material_planes, *outer_planes], feyfell
 
     return planes
 
+
 def initialize():
 
-    planes = get_isune_cosmology()
-    isune_dash = IsuneDashApp(planes)
+    planes, feyfell = get_isune_cosmology()
+    isune_dash = IsuneDashApp(planes, feyfell)
     app = isune_dash.get_app(planes)
 
     return app
+
 
 if __name__ == "__main__":
     app = initialize()

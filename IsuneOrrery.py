@@ -71,15 +71,27 @@ class Plane:
 
 
     def location_from_hours(self, hours: int) -> tuple[float, float, float]:
-
+        """Return the location of the plane for the given time"""
         theta = (math.tau / self.period_in_hours) * (hours - self.phase)
         return self.orbit.location_from_hours(theta)
+
+    def location_slice_from_hours(self, hours: int, phase_offset_minus: float, phase_offset_plus: float, n_slice: int) -> tuple[tuple[float, float, float]]:
+        """Return a list of n_slice locations for this plane.
+        The locations are within [phase_offset_minus, phase_offset_plus, marked from the given time."""
+        hours_start = hours - self.period_in_hours * phase_offset_minus
+        hours_end = hours + self.period_in_hours * phase_offset_plus
+        slice_hours = np.linspace(hours_start, hours_end, n_slice)
+
+        locations_slice = tuple(self.location_from_hours(hour) for hour in slice_hours)
+        return locations_slice
+
+    def __str__(self):
+        return self.name
 
 
 class Orbit:
 
-
-    def __init__(self, rotational_axis: list[float, float, float], amplitude: float, eccentricity=1.0, center=[0, 0, 0]):
+    def __init__(self, rotational_axis: list[float, float, float], amplitude: float, eccentricity=1.0, center=(0, 0, 0)):
 
         self.rotational_axis = rotational_axis / np.linalg.norm(rotational_axis)
         self.amplitude = amplitude
