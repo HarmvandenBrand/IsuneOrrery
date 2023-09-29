@@ -79,10 +79,10 @@ class IsuneDashApp:
         scatter = go.Scatter3d(x=df['x'], y=df['y'], z=df['z'], text=df['name'], mode='markers', opacity=0.9, name="Material Planes")
 
         feywild_df = self.plane_slice_to_df(self.slice_planes[0], 0.24, 0.24)
-        feywild_scatter = go.Scatter3d(x=feywild_df['x'], y=feywild_df['y'], z=feywild_df['z'], text=feywild_df['name'], marker=dict(opacity=0.0), line=dict(width=feywild_df['size'][0], color=feywild_df['color'][0]), name=feywild_df['name'][0], opacity=SLICE_ORBIT_OPACITY, hovertemplate='%{text}<extra></extra>')
+        feywild_scatter = go.Scatter3d(x=feywild_df['x'], y=feywild_df['y'], z=feywild_df['z'], text=feywild_df['name'], mode='lines', line=dict(width=feywild_df['size'][0], color=feywild_df['color'][0]), name=feywild_df['name'][0], opacity=SLICE_ORBIT_OPACITY, hovertemplate='%{text}<extra></extra>')
 
         shadowfell_df = self.plane_slice_to_df(self.slice_planes[1], 0.24, 0.24)
-        shadowfell_scatter = go.Scatter3d(x=shadowfell_df['x'], y=shadowfell_df['y'], z=shadowfell_df['z'], text=shadowfell_df['name'], marker=dict(opacity=0.01), line=dict(width=shadowfell_df['size'][0], color=shadowfell_df['color'][0]), name=shadowfell_df['name'][0], opacity=SLICE_ORBIT_OPACITY, hovertemplate='%{text}<extra></extra>')
+        shadowfell_scatter = go.Scatter3d(x=shadowfell_df['x'], y=shadowfell_df['y'], z=shadowfell_df['z'], text=shadowfell_df['name'], mode='lines', line=dict(width=shadowfell_df['size'][0], color=shadowfell_df['color'][0]), name=shadowfell_df['name'][0], opacity=SLICE_ORBIT_OPACITY, hovertemplate='%{text}<extra></extra>')
 
         # test_df = self.planes_to_df(TEST_PLANES)
         # test_scatter = go.Scatter3d(x=test_df['x'], y=test_df['y'], z=test_df['z'], text=test_df['name'], mode='markers', opacity=0.9, name="FeyFell", hoverinfo='skip')  # Note the "hoverinfo='skip'"
