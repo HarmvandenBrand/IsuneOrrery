@@ -140,7 +140,8 @@ class IsuneDashApp:
         app.layout = html.Div(
         [
             html.Div(id='current-date-div', children=str(self.calendar)),
-            dcc.Graph(id='graph', figure=self.fig),
+            #  'graph', 'cube', 'circle', 'dot'
+            dcc.Loading(id="loading-screen-graph", type="cube", fullscreen=True, children=dcc.Graph(id='graph', figure=self.fig)),
             dcc.Input(id='calendar-field', value='0000/01/01 00:00', type='text'),
             html.Button(children='update', id='update-button'),
             html.Button(children='-1', id='minus-1-hour-button'),
@@ -190,7 +191,7 @@ class IsuneDashApp:
             else:
 
                 triggered_id = dash.ctx.triggered_id
-                print(triggered_id)
+
                 if triggered_id == 'update-button':
                     self.parse_calendar(value)
                 elif triggered_id == 'minus-1-hour-button':
