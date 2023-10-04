@@ -10,19 +10,13 @@ DEFAULT_PLANE_SIZE = 10
 class Orrery:
     pass
 
-    # arcane core is at (0,0,0)
-    # reference plane is the (x,y) plane and is defined as the ecliptic plane for all material planes
-
-    # Each plane has a unique biome and terrain, which results in a different climate dedicated to it.
-    # There is also a central divide of hemispheres within the axis of material planes.
-    # On the northern hemisphere are Veka (air), Aspen (ice), Oshya (water) and Kipra (earth) where Winter starts its cycle in the month Srabuph.
-    # In the southern hemisphere are Uthos (rock), Xidor (shadow), Iraz (fire), and Baruta (lighting) where Winter starts in the month Newird.
-
 
 class Plane:
+    """Represents a simple planet-like plane. Also functions as base class for all other planes."""
+
     # __slots__ = "name"
 
-    def __init__(self, name, orbit: Optional['Orbit'], period_in_hours: int, phase: float, color: str, size=DEFAULT_PLANE_SIZE):
+    def __init__(self, name, orbit: Optional['Orbit'], period_in_hours: int, phase: float, color: str, size: int):
         self.name = name
         self.orbit = orbit if orbit is not None else Orbit.NULL_ORBIT
         self.period_in_hours = period_in_hours
@@ -75,18 +69,26 @@ class Plane:
         theta = (math.tau / self.period_in_hours) * (hours - self.phase)
         return self.orbit.location_from_hours(theta)
 
-    def location_slice_from_hours(self, hours: int, phase_offset_minus: float, phase_offset_plus: float, n_slice: int) -> tuple[tuple[float, float, float]]:
+
+    def __str__(self):
+        return self.name
+
+
+class ExtrusionPlane(Plane):
+
+    def __init__(self, name, orbit: Optional['Orbit'], period_in_hours: int, phase: float, color: str, size: int, extrusion: float):
+        super().__init__(name, orbit, period_in_hours, phase, color, size)
+        self.extrusion_percentage = extrusion
+
+    def location_extrusion_from_hours(self, hours: int, n_slice: int) -> tuple[tuple[float, float, float]]:
         """Return a list of n_slice locations for this plane.
         The locations are within [phase_offset_minus, phase_offset_plus, marked from the given time."""
-        hours_start = hours - self.period_in_hours * phase_offset_minus
-        hours_end = hours + self.period_in_hours * phase_offset_plus
+        hours_start = hours - self.period_in_hours * (self.extrusion_percentage/2)
+        hours_end = hours + self.period_in_hours * (self.extrusion_percentage/2)
         slice_hours = np.linspace(hours_start, hours_end, n_slice)
 
         locations_slice = tuple(self.location_from_hours(hour) for hour in slice_hours)
         return locations_slice
-
-    def __str__(self):
-        return self.name
 
 
 class Orbit:

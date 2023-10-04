@@ -7,8 +7,10 @@ from IsuneView import IsuneDashApp
 - fix plane size independent of zoom level (maybe replace scatterplot with https://stackoverflow.com/questions/70977042/how-to-plot-spheres-in-3d-with-plotly-or-another-library)
 - make calendar date client-side instead of server-side
 - fix issue where camera can't be dragged and figure won't be updated during animation (i.e. when interval is enabled)
+- fix bug so that loading screen no longer displays on any change to graph or any callback
 - Remove trace info on hover for material and outer planes
 - add different play speeds
+- Put feywild and shadowfell in same trace?
 - Put outer planes in different trace
 - beautify layout (e.g. reposition and css the current date, use date name)
 - refactor Ven'ron logic
@@ -18,8 +20,8 @@ from IsuneView import IsuneDashApp
 
 def initialize():
 
-    planes, feyfell = IsuneCosmology.get_isune_cosmology()
-    isune_dash = IsuneDashApp(planes, feyfell)
+    planes = IsuneCosmology.get_isune_cosmology()
+    isune_dash = IsuneDashApp(planes)
     app = isune_dash.get_app(planes)
 
     return app

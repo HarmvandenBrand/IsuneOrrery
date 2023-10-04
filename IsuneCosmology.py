@@ -1,4 +1,4 @@
-from IsuneOrrery import Plane, Orbit
+from IsuneOrrery import Plane, ExtrusionPlane, Orbit
 
 
 
@@ -11,6 +11,15 @@ PERIOD_IN_HOURS_OUTER_PLANES = 24 * 32  # outer planes: 32 days
 
 OUTER_PLANES_COLOR = "#aaaaaa"
 OUTER_PLANES_SIZE = 15
+
+
+# arcane core is at (0,0,0)
+# reference plane is the (x,y) plane and is defined as the ecliptic plane for all material planes
+
+# Each plane has a unique biome and terrain, which results in a different climate dedicated to it.
+# There is also a central divide of hemispheres within the axis of material planes.
+# On the northern hemisphere are Veka (air), Aspen (ice), Oshya (water) and Kipra (earth) where Winter starts its cycle in the month Srabuph.
+# In the southern hemisphere are Uthos (rock), Xidor (shadow), Iraz (fire), and Baruta (lighting) where Winter starts in the month Newird.
 
 
 def get_material_planes() -> list[Plane]:
@@ -52,8 +61,8 @@ def get_outer_planes() -> list[Plane]:
 def get_feyfell_planes() -> list[Plane]:
     feyfell_orbit = Orbit(rotational_axis=[1.0, 0.0, 0.6], amplitude=INNER_PLANES_AMPLITUDE)
 
-    feywild = Plane("Feywild", orbit=feyfell_orbit, period_in_hours=PERIOD_IN_HOURS_OTHER_INNER_PLANES, phase=0.0, color="#dba1e0", size=20)
-    shadowfell = Plane("Shadowfell", orbit=feyfell_orbit, period_in_hours=PERIOD_IN_HOURS_OTHER_INNER_PLANES, phase=0.5, color="#7f7f7f", size=20)
+    feywild = ExtrusionPlane("Feywild", orbit=feyfell_orbit, period_in_hours=PERIOD_IN_HOURS_OTHER_INNER_PLANES, phase=0.0, color="#dba1e0", size=20, extrusion=0.48)
+    shadowfell = ExtrusionPlane("Shadowfell", orbit=feyfell_orbit, period_in_hours=PERIOD_IN_HOURS_OTHER_INNER_PLANES, phase=0.5, color="#7f7f7f", size=20, extrusion=0.48)
     feyfell = [feywild, shadowfell]
 
     return feyfell
@@ -67,6 +76,6 @@ def get_isune_cosmology():
     # - Ethereal plane
     outer_planes = get_outer_planes()
 
-    planes = [arcane_core, *material_planes, *outer_planes], feyfell_planes
+    planes = [arcane_core, *material_planes, *outer_planes, *feyfell_planes]
 
     return planes
