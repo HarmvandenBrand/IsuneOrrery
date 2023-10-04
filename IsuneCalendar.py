@@ -12,9 +12,13 @@ class Calendar:
     NUM_DAYS_IN_YEAR = NUM_MONTHS_IN_YEAR * NUM_DAYS_IN_MONTH
     NUM_WEEKS_IN_YEAR = math.ceil(NUM_DAYS_IN_YEAR / NUM_DAYS_IN_WEEK)
 
+    MONTH_NAMES = ('Botehr', 'Quxuns', 'Kleisk', 'Mowohs', 'Blosont', 'Newird', 'Flilu', 'Criwa', 'Pleguht', 'Quihn', 'Klibelm', 'Srabuph')
+
     def __init__(self, years: int, months: int, days: int, hours: int):
-        """Constructor takes data in human format (i.e., first month/day is month/day 1 not 0).
-        Methods making use of constructor should act accordingly."""
+        """NOTE: The Calendar class counts months starting from zero for internal logic. Externally, months start at one.
+        Constructor takes data in human format (i.e., first month/day is month/day 1 not 0).
+        Methods making use of constructor should act accordingly. Developers adjusting this class should clearly distinguish
+        usage of fields (e.g. self.years, self.months), which are internal, vs usage of methods (e.g. self.year(), self.month()), which are external."""
 
         if months == 0 or days == 0:
             raise ValueError("Invalid date: neither month nor day can be zero")
@@ -95,6 +99,9 @@ class Calendar:
                 return self.months < other.months
         else:
             return self.years < other.years
+
+    def month_name(self) -> str:
+        return Calendar.MONTH_NAMES[self.months]
 
     def year(self) -> int:
         return self.years
