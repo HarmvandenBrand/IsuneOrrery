@@ -6,7 +6,7 @@ from dash.dependencies import Output, State, Input
 import plotly.graph_objects as go
 import pandas as pd
 
-from IsuneOrrery import Plane, ExtrusionPlane, Orbit
+from IsuneOrrery import Plane, ExtrusionPlane, AsteroidBeltPlane, Orbit
 from IsuneCalendar import Calendar, Hour
 
 
@@ -24,7 +24,7 @@ class IsuneDashApp:
         self.calendar = calendar
         self.simple_planes = [plane for plane in planes if type(plane) is Plane]
         self.extrusion_planes = [plane for plane in planes if type(plane) is ExtrusionPlane]
-        # self.swarm_planes = swarm_planes
+        self.asteroid_planes = [plane for plane in planes if type(plane) is AsteroidBeltPlane]
         self.fig = None
 
     def parse_calendar(self, calendar_string: str) -> Calendar:
@@ -64,7 +64,7 @@ class IsuneDashApp:
 
 
     def plane_extrusion_to_df(self, plane: ExtrusionPlane, phase_offset_minus, phase_offset_plus):
-        locations = [*plane.location_extrusion_from_hours(self.calendar.total_hours(), 50)]
+        locations = [*plane.locations_extrusion_from_hours(self.calendar.total_hours(), 50)]
         location_dict = {'x': [v[0] for v in locations], 'y': [v[1] for v in locations], 'z': [v[2] for v in locations]}
         df = pd.DataFrame(location_dict)
         df['color'] = plane.color if plane.color is not None else '#dddddd'
@@ -73,6 +73,25 @@ class IsuneDashApp:
 
         return df
 
+    def plane_asteroid_to_df(self, plane: AsteroidBeltPlane):
+
+        locations, deltas = plane.locations_belt_from_hours(self.calendar.total_hours())
+
+        # hack for fixing the size of cone plots in plotly
+        epsilon = 0.000001
+        v_last = [v + epsilon for v in locations[-1]]
+        locations.append(v_last)
+        deltas.append(deltas[-1])
+
+        asteroid_dict = {'x': [v[0] for v in locations], 'y': [v[1] for v in locations], 'z': [v[2] for v in locations],
+                         'u': [d[0] for d in deltas], 'v': [d[1] for d in deltas], 'w': [d[0] for d in deltas]}
+
+        df = pd.DataFrame(asteroid_dict)
+        df['color'] = plane.color if plane.color is not None else '#dddddd'
+        df['name'] = plane.name if plane.name is not None else 'None'
+        df['size'] = int(plane.size * 1.5)
+
+        return df
 
     def calculate_fig(self):
         simple_df = self.planes_to_df(self.simple_planes)
@@ -84,6 +103,10 @@ class IsuneDashApp:
         shadowfell_df = self.plane_extrusion_to_df(self.extrusion_planes[1], 0.24, 0.24)
         shadowfell_trace = go.Scatter3d(x=shadowfell_df['x'], y=shadowfell_df['y'], z=shadowfell_df['z'], text=shadowfell_df['name'], mode='lines', line=dict(width=shadowfell_df['size'][0], color=shadowfell_df['color'][0]), name=shadowfell_df['name'][0], opacity=SLICE_ORBIT_OPACITY, hovertemplate='%{text}<extra></extra>')
 
+        ethereal_df = self.plane_asteroid_to_df(self.asteroid_planes[0])
+        ethereal_colorscale = [[0, '#bff0fc'], [1, '#ffffff']]
+        ethereal_trace = go.Cone(x=ethereal_df['x'], y=ethereal_df['y'], z=ethereal_df['z'], u=ethereal_df['u'], v=ethereal_df['v'], w=ethereal_df['w'], text=ethereal_df['name'][0], name=ethereal_df['name'][0], sizemode='absolute', sizeref=400000, colorscale=ethereal_colorscale, showscale=False, hovertemplate=f'{ethereal_df["name"][0]}<extra></extra>', showlegend=True)
+
         # test_df = self.planes_to_df(TEST_PLANES)
         # test_scatter = go.Scatter3d(x=test_df['x'], y=test_df['y'], z=test_df['z'], text=test_df['name'], mode='markers', opacity=0.9, name="FeyFell", hoverinfo='skip')  # Note the "hoverinfo='skip'"
 
@@ -91,6 +114,7 @@ class IsuneDashApp:
             self.fig = go.Figure(data=simple_planes_trace)
             self.fig.add_trace(feywild_trace)
             self.fig.add_trace(shadowfell_trace)
+            self.fig.add_trace(ethereal_trace)
 
             # add individual colors for material plane
             self.fig.update_traces(marker=dict(color=simple_df['color'], size=simple_df['size']), selector=dict(name="Material Planes"))
@@ -125,6 +149,7 @@ class IsuneDashApp:
             # self.fig = self.fig.update_traces(test_scatter, selector=dict(name="FeyFell"), overwrite=False)
             self.fig = self.fig.update_traces(feywild_trace, selector=dict(name="Feywild"), overwrite=False)
             self.fig = self.fig.update_traces(shadowfell_trace, selector=dict(name="Shadowfell"), overwrite=False)
+            self.fig = self.fig.update_traces(ethereal_trace, selector=dict(name="Ethereal Plane"), overwrite=False)
 
         return self.fig
 

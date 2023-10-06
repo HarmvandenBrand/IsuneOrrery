@@ -1,10 +1,9 @@
+import random
 from typing import Optional
 
 from IsuneCalendar import Calendar, Year, Month, Day, Hour
 import math
 import numpy as np
-
-DEFAULT_PLANE_SIZE = 10
 
 
 class Orrery:
@@ -63,11 +62,12 @@ class Plane:
 
         return x, y, z
 
+    def _theta(self, hours: int | float) -> float:
+        return (math.tau / self.period_in_hours) * (hours - self.phase)
 
     def location_from_hours(self, hours: int) -> tuple[float, float, float]:
         """Return the location of the plane for the given time"""
-        theta = (math.tau / self.period_in_hours) * (hours - self.phase)
-        return self.orbit.location_from_hours(theta)
+        return self.orbit.location_from_hours(self._theta(hours))
 
 
     def __str__(self):
@@ -75,20 +75,63 @@ class Plane:
 
 
 class ExtrusionPlane(Plane):
+    """Planes that cover an extended stretch of space along their orbit. Typical examples are the feywild and shadowfell planes."""
 
     def __init__(self, name, orbit: Optional['Orbit'], period_in_hours: int, phase: float, color: str, size: int, extrusion: float):
         super().__init__(name, orbit, period_in_hours, phase, color, size)
         self.extrusion_percentage = extrusion
 
-    def location_extrusion_from_hours(self, hours: int, n_slice: int) -> tuple[tuple[float, float, float]]:
+    def locations_extrusion_from_hours(self, hours: int, n_slice: int) -> tuple[tuple[float, float, float]]:
         """Return a list of n_slice locations for this plane.
-        The locations are within [phase_offset_minus, phase_offset_plus, marked from the given time."""
+        The locations are within [-extrusion_percentage/2, extrusion_percentage/2], marked from the given time."""
         hours_start = hours - self.period_in_hours * (self.extrusion_percentage/2)
         hours_end = hours + self.period_in_hours * (self.extrusion_percentage/2)
         slice_hours = np.linspace(hours_start, hours_end, n_slice)
 
         locations_slice = tuple(self.location_from_hours(hour) for hour in slice_hours)
         return locations_slice
+
+
+class AsteroidBeltPlane(ExtrusionPlane):
+
+    def __init__(self, name, orbit: Optional['Orbit'], period_in_hours: int, phase: float, color: str, size: int, extrusion: float, n: int, sigma=2):
+        super().__init__(name, orbit, period_in_hours, phase, color, size, extrusion)
+
+        self.N = n
+        self.sigma = sigma
+
+        # Disable inappropriate parent methods
+        self.location_from_hours = None
+        self.location_extrusion_from_hours = None
+
+    def locations_belt_from_hours(self, hours: int):
+        """Generates a number of random points and corresponding tangent vectors along the extrusion curve.
+        The locations are within [-extrusion_percentage/2, extrusion_percentage/2], marked from the given time.
+        The randomness and number of generated point,tangent pairs are determined by instance fields."""
+
+        hours_start = hours - self.period_in_hours * (self.extrusion_percentage/2)
+        hours_end = hours + self.period_in_hours * (self.extrusion_percentage/2)
+
+        vertices = []
+        deltas = []
+
+        for _ in range(self.N):
+            # Generate random location within extrusion space
+            hour = random.random() * (hours_end - hours_start) + hours_start
+            loc1 = self.orbit.location_from_hours(self._theta(hour))
+
+            # Generate delta's, a.k.a. direction vectors
+            loc2 = self.orbit.location_from_hours((self._theta(hour+0.01)))
+            delta = [loc2[0]-loc1[0], loc2[1]-loc1[1], loc2[2]-loc1[2]]
+            delta = delta / np.linalg.norm(delta)  # normalization is important for fixing sizing of cones in plotly
+
+            # add randomnness
+            loc1 = [loc + random.gauss(0.0, self.sigma) for loc in loc1]
+
+            vertices.append(loc1)
+            deltas.append(delta)
+
+        return vertices, deltas
 
 
 class Orbit:
@@ -104,7 +147,6 @@ class Orbit:
 
 
     def _create_orbit_vectors(self, rotational_axis_vector: np.ndarray):
-
         # Gram-Schmidt procedure to generate orthogonal vectors (see https://stackoverflow.com/questions/33658620/generating-two-orthogonal-vectors-that-are-orthogonal-to-a-particular-direction)
         a = np.random.randn(3)
         a -= a.dot(rotational_axis_vector) * rotational_axis_vector
@@ -115,7 +157,8 @@ class Orbit:
 
         return a, b
 
-    def location_from_hours(self, theta):
+    def location_from_hours(self, theta: float):
+        # https://math.stackexchange.com/questions/73237/parametric-equation-of-a-circle-in-3d-space
         a = self._orthogonal_axis_a
         b = self._orthogonal_axis_b
 
