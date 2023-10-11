@@ -4,9 +4,8 @@ from dash import html
 from dash.dependencies import Output, State, Input
 
 import plotly.graph_objects as go
-import pandas as pd
 
-from IsuneOrrery import Plane, ExtrusionPlane, AsteroidBeltPlane, Orbit
+from IsuneOrrery import Plane, ExtrusionPlane, AsteroidBeltPlane, Orbit, Orrery
 from IsuneCalendar import Calendar, Hour
 
 
@@ -16,15 +15,13 @@ TEST_ORBIT = Orbit(rotational_axis=[0.0, 0.0, 1.0], amplitude=20)
 TEST_PLANES = [Plane("Test", orbit=TEST_ORBIT, period_in_hours=24 * 8, phase=0 / 8, color="#010101", size=20)]
 
 SLICE_ORBIT_OPACITY = 0.5
+UNIFORM_SIZE_FACTOR = 1.5
 
 
 class IsuneDashApp:
 
-    def __init__(self, planes: list[Plane], calendar=Calendar(0,1,1,0)):
-        self.calendar = calendar
-        self.simple_planes = [plane for plane in planes if type(plane) is Plane]
-        self.extrusion_planes = [plane for plane in planes if type(plane) is ExtrusionPlane]
-        self.asteroid_planes = [plane for plane in planes if type(plane) is AsteroidBeltPlane]
+    def __init__(self, orrery: Orrery):
+        self.orrery = orrery
         self.fig = None
 
     def parse_calendar(self, calendar_string: str) -> Calendar:
@@ -42,86 +39,37 @@ class IsuneDashApp:
             days = int(values[2].split(' ')[0])
             hours = int(values[2].split(' ')[1].split(':')[0])
 
-            self.calendar = Calendar(years=years, months=months, days=days, hours=hours)
+            self.orrery.calendar = Calendar(years=years, months=months, days=days, hours=hours)
 
-    def planes_to_df(self, planes: list[Plane]):
-        """Orders calculation of the current state of the orrery and creates a dataframe from that data.
-        This function assumes the calendar date has already been correctly set."""
+    def create_traces_from_orrery(self):
+        dfs_dict = self.orrery.get_dfs_dict()
+        simple_planes_dict = dfs_dict["simple planes"]
+        extrusion_planes_dict = dfs_dict["extrusion planes"]
+        asteroid_planes_dict = dfs_dict["asteroid planes"]
 
-        # Delete all planes before the zero date and display only Venron
-        # TODO: refactor this model logic away from the view
-        if self.calendar < Calendar(0, 1, 1, 0):
-            planes = [Plane("Ven'ron", orbit=None, period_in_hours=10, phase=0.0, color="#bbbbee", size=45)]
+        traces = []
 
-        locations = [[*plane.location_from_hours(self.calendar.total_hours())] for plane in planes]
-        location_dict = {'x': [v[0] for v in locations], 'y': [v[1] for v in locations], 'z': [v[2] for v in locations]}
-        df = pd.DataFrame(location_dict)
-        df['color'] = [plane.color if plane.color is not None else '#dddddd' for plane in planes]
-        df['name'] = [plane.name if plane.name is not None else 'None' for plane in planes]
-        df['size'] = [int(plane.size*1.5) for plane in planes]
+        for key in simple_planes_dict.keys():
+            df = simple_planes_dict[key]
+            traces.append(go.Scatter3d(x=df['x'], y=df['y'], z=df['z'], text=df['name'], mode='markers', marker=dict(color=df['color'], size=df['size']*UNIFORM_SIZE_FACTOR), opacity=0.9, name=key))
 
-        return df
+        for key in extrusion_planes_dict.keys():
+            df = extrusion_planes_dict[key]
+            traces.append(go.Scatter3d(x=df['x'], y=df['y'], z=df['z'], text=df['name'], mode='lines', line=dict(width=df['size'][0]*UNIFORM_SIZE_FACTOR, color=df['color'][0]), name=df['name'][0], opacity=SLICE_ORBIT_OPACITY, hovertemplate='%{text}<extra></extra>'))
 
+        for key in asteroid_planes_dict.keys():
+            df = asteroid_planes_dict[key]
+            colorscale = [[0, '#bff0fc'], [1, '#ffffff']]
+            traces.append(go.Cone(x=df['x'], y=df['y'], z=df['z'], u=df['u'], v=df['v'], w=df['w'], text=df['name'][0], name=df['name'][0], sizemode='absolute', sizeref=400000, colorscale=colorscale, showscale=False, hovertemplate=f'{df["name"][0]}<extra></extra>', showlegend=True))
 
-    def plane_extrusion_to_df(self, plane: ExtrusionPlane, phase_offset_minus, phase_offset_plus):
-        locations = [*plane.locations_extrusion_from_hours(self.calendar.total_hours(), 50)]
-        location_dict = {'x': [v[0] for v in locations], 'y': [v[1] for v in locations], 'z': [v[2] for v in locations]}
-        df = pd.DataFrame(location_dict)
-        df['color'] = plane.color if plane.color is not None else '#dddddd'
-        df['name'] = plane.name if plane.name is not None else 'None'
-        df['size'] = int(plane.size*1.5)
-
-        return df
-
-    def plane_asteroid_to_df(self, plane: AsteroidBeltPlane):
-
-        locations, deltas = plane.locations_belt_from_hours(self.calendar.total_hours())
-
-        # hack for fixing the size of cone plots in plotly
-        epsilon = 0.000001
-        v_last = [v + epsilon for v in locations[-1]]
-        locations.append(v_last)
-        deltas.append(deltas[-1])
-
-        asteroid_dict = {'x': [v[0] for v in locations], 'y': [v[1] for v in locations], 'z': [v[2] for v in locations],
-                         'u': [d[0] for d in deltas], 'v': [d[1] for d in deltas], 'w': [d[0] for d in deltas]}
-
-        df = pd.DataFrame(asteroid_dict)
-        df['color'] = plane.color if plane.color is not None else '#dddddd'
-        df['name'] = plane.name if plane.name is not None else 'None'
-        df['size'] = int(plane.size * 1.5)
-
-        return df
+        return traces
 
     def calculate_fig(self):
-        simple_df = self.planes_to_df(self.simple_planes)
-        simple_planes_trace = go.Scatter3d(x=simple_df['x'], y=simple_df['y'], z=simple_df['z'], text=simple_df['name'], mode='markers', opacity=0.9, name="Material Planes")
 
-        feywild_df = self.plane_extrusion_to_df(self.extrusion_planes[0], 0.24, 0.24)
-        feywild_trace = go.Scatter3d(x=feywild_df['x'], y=feywild_df['y'], z=feywild_df['z'], text=feywild_df['name'], mode='lines', line=dict(width=feywild_df['size'][0], color=feywild_df['color'][0]), name=feywild_df['name'][0], opacity=SLICE_ORBIT_OPACITY, hovertemplate='%{text}<extra></extra>')
-
-        shadowfell_df = self.plane_extrusion_to_df(self.extrusion_planes[1], 0.24, 0.24)
-        shadowfell_trace = go.Scatter3d(x=shadowfell_df['x'], y=shadowfell_df['y'], z=shadowfell_df['z'], text=shadowfell_df['name'], mode='lines', line=dict(width=shadowfell_df['size'][0], color=shadowfell_df['color'][0]), name=shadowfell_df['name'][0], opacity=SLICE_ORBIT_OPACITY, hovertemplate='%{text}<extra></extra>')
-
-        ethereal_df = self.plane_asteroid_to_df(self.asteroid_planes[0])
-        ethereal_colorscale = [[0, '#bff0fc'], [1, '#ffffff']]
-        ethereal_trace = go.Cone(x=ethereal_df['x'], y=ethereal_df['y'], z=ethereal_df['z'], u=ethereal_df['u'], v=ethereal_df['v'], w=ethereal_df['w'], text=ethereal_df['name'][0], name=ethereal_df['name'][0], sizemode='absolute', sizeref=400000, colorscale=ethereal_colorscale, showscale=False, hovertemplate=f'{ethereal_df["name"][0]}<extra></extra>', showlegend=True)
-
-        # test_df = self.planes_to_df(TEST_PLANES)
-        # test_scatter = go.Scatter3d(x=test_df['x'], y=test_df['y'], z=test_df['z'], text=test_df['name'], mode='markers', opacity=0.9, name="FeyFell", hoverinfo='skip')  # Note the "hoverinfo='skip'"
+        traces = self.create_traces_from_orrery()
 
         if self.fig is None:
-            self.fig = go.Figure(data=simple_planes_trace)
-            self.fig.add_trace(feywild_trace)
-            self.fig.add_trace(shadowfell_trace)
-            self.fig.add_trace(ethereal_trace)
-
-            # add individual colors for material plane
-            self.fig.update_traces(marker=dict(color=simple_df['color'], size=simple_df['size']), selector=dict(name="Material Planes"))
-
-            # Test stuff
-            # self.fig.add_trace(test_scatter)
-            # self.fig.update_traces(marker=dict(color=test_df['color'], size=test_df['size']), selector=dict(name="FeyFell"))
+            self.fig = go.Figure(data=traces)
 
             # important line, maintains user-adjusted camera view after figure update
             self.fig.layout.uirevision = 1
@@ -145,16 +93,13 @@ class IsuneDashApp:
             self.fig.update_layout(width=1200, height=800, autosize=False)
 
         else:
-            self.fig = self.fig.update_traces(simple_planes_trace, selector=dict(name="Material Planes"), overwrite=False)
-            # self.fig = self.fig.update_traces(test_scatter, selector=dict(name="FeyFell"), overwrite=False)
-            self.fig = self.fig.update_traces(feywild_trace, selector=dict(name="Feywild"), overwrite=False)
-            self.fig = self.fig.update_traces(shadowfell_trace, selector=dict(name="Shadowfell"), overwrite=False)
-            self.fig = self.fig.update_traces(ethereal_trace, selector=dict(name="Ethereal Plane"), overwrite=False)
+            for trace in traces:
+                self.fig = self.fig.update_traces(trace, selector=dict(name=trace.name), overwrite=False)
 
         return self.fig
 
 
-    def get_app(self, planes: list[Plane]):
+    def get_app(self):
 
         # Initialize the app
         app = dash.Dash("Isune Astrolabe")
@@ -164,7 +109,7 @@ class IsuneDashApp:
         # App layout
         app.layout = html.Div(
         [
-            html.Div(id='current-date-div', children=str(self.calendar)),
+            html.Div(id='current-date-div', children=str(self.orrery.calendar)),
             # dcc.Loading(id="loading-screen-graph", type="cube", fullscreen=True, children=dcc.Graph(id='graph', figure=self.fig)),
             dcc.Graph(id='graph', figure=self.fig),
             dcc.Input(id='calendar-field', value='0000/01/01 00:00', type='text'),
@@ -220,15 +165,15 @@ class IsuneDashApp:
                 if triggered_id == 'update-button':
                     self.parse_calendar(value)
                 elif triggered_id == 'minus-1-hour-button':
-                    self.calendar = self.calendar - Hour(1)
+                    self.orrery.calendar = self.orrery.calendar - Hour(1)
                 elif triggered_id == 'plus-1-hour-button':
-                    self.calendar = self.calendar + Hour(1)
+                    self.orrery.calendar = self.orrery.calendar + Hour(1)
                 elif triggered_id == 'interval-component':
-                    self.calendar = self.calendar + Hour(1)
+                    self.orrery.calendar = self.orrery.calendar + Hour(1)
 
 
                 self.calculate_fig()
 
-                return self.fig, str(self.calendar)
+                return self.fig, str(self.orrery.calendar)
 
         return app

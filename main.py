@@ -1,4 +1,5 @@
 import IsuneCosmology
+from IsuneOrrery import Orrery
 from IsuneView import IsuneDashApp
 
 
@@ -8,21 +9,19 @@ from IsuneView import IsuneDashApp
 - make calendar date client-side instead of server-side
 - fix issue where camera can't be dragged and figure won't be updated during animation (i.e. when interval is enabled)
 - fix bug so that loading screen no longer displays on any change to graph or any callback
-- Remove trace info on hover for material and outer planes
+- Remove unnecessary trace info on hover for material and outer planes
 - add different play speeds
 - Put feywild and shadowfell in same trace?
-- Put outer planes in different trace
 - beautify layout (e.g. reposition and css the current date, use date name)
-- refactor Ven'ron logic
-- add ethereal plane (swarm of cone plots?)
 '''
 
 
 def initialize():
 
     planes = IsuneCosmology.get_isune_cosmology()
-    isune_dash = IsuneDashApp(planes)
-    app = isune_dash.get_app(planes)
+    isune_orrery = Orrery(*planes)
+    isune_dash = IsuneDashApp(isune_orrery)
+    app = isune_dash.get_app()
 
     return app
 

@@ -78,6 +78,6 @@ def get_isune_cosmology():
     ethereal_plane = get_ethereal_plane()
     outer_planes = get_outer_planes()
 
-    planes = [arcane_core, *material_planes, *feyfell_planes, ethereal_plane, *outer_planes]
+    planes = [arcane_core, material_planes, feyfell_planes, [ethereal_plane], outer_planes]
 
     return planes

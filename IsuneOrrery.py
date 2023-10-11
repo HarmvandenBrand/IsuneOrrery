@@ -1,13 +1,93 @@
 import random
 from typing import Optional
 
+import pandas as pd
+
 from IsuneCalendar import Calendar, Year, Month, Day, Hour
 import math
 import numpy as np
 
 
 class Orrery:
-    pass
+
+    def __init__(self, sun: 'Plane', material_planes: list['Plane'], extrusion_planes: list['ExtrusionPlane'], asteroid_planes: list['AsteroidBeltPlane'], outer_planes: list['Plane']):
+        self.sun_plane = sun
+        self.material_planes = material_planes
+        self.extrusion_planes = extrusion_planes
+        self.asteroid_planes = asteroid_planes
+        self.outer_planes = outer_planes
+
+        self.calendar = Calendar(0, 1, 1, 0)
+        self._vilron = Plane("Vil'ron", orbit=None, period_in_hours=10, phase=0.0, color="#bbbbee", size=45)
+
+
+    def get_dfs_dict(self) -> dict:
+
+        if self.calendar < Calendar(0, 1, 1, 0):
+            # Before the zero date display only Venron
+            return {"simple planes": self._simple_planes_to_df([self.sun_plane])}
+        else:
+            sun_plane_df = self._simple_planes_to_df([self.sun_plane])
+            material_planes_df = self._simple_planes_to_df(self.material_planes)
+            feywild_df, shadowfell_df = self._extrusion_planes_to_dfs(self.extrusion_planes)
+            ethereal_plane_df = self._asteroid_belt_planes_to_dfs(self.asteroid_planes)[0]
+            outer_planes_df = self._simple_planes_to_df(self.outer_planes)
+
+            dfs_dict = {"simple planes": {self.sun_plane.name: sun_plane_df, "Material Planes": material_planes_df, "Outer Planes": outer_planes_df},
+                        "extrusion planes": {"Feywild": feywild_df, "Shadowfell": shadowfell_df},
+                        "asteroid planes": {"Ethereal Plane": ethereal_plane_df}}
+
+            return dfs_dict
+
+    def _simple_planes_to_df(self, planes: list['Plane']) -> pd.DataFrame:
+        """Orders calculation of the current state of the orrery and creates a dataframe from that data.
+        This function assumes the calendar date has already been correctly set."""
+
+        locations = [[*plane.location_from_hours(self.calendar.total_hours())] for plane in planes]
+        location_dict = {'x': [v[0] for v in locations], 'y': [v[1] for v in locations], 'z': [v[2] for v in locations]}
+        df = pd.DataFrame(location_dict)
+        df['color'] = [plane.color if plane.color is not None else '#dddddd' for plane in planes]
+        df['name'] = [plane.name if plane.name is not None else 'None' for plane in planes]
+        df['size'] = [int(plane.size) for plane in planes]
+
+        return df
+
+    def _extrusion_planes_to_dfs(self, planes: list['ExtrusionPlane']) -> list[pd.DataFrame]:
+        dfs = []
+
+        for plane in planes:
+            locations = [*plane.locations_extrusion_from_hours(self.calendar.total_hours(), n_slice=50)]
+            location_dict = {'x': [v[0] for v in locations], 'y': [v[1] for v in locations], 'z': [v[2] for v in locations]}
+
+            df = pd.DataFrame(location_dict)
+            df['color'] = plane.color if plane.color is not None else '#dddddd'
+            df['name'] = plane.name if plane.name is not None else 'None'
+            df['size'] = int(plane.size)
+            dfs.append(df)
+
+        return dfs
+
+    def _asteroid_belt_planes_to_dfs(self, planes: list['AsteroidBeltPlane']) -> list[pd.DataFrame]:
+        dfs = []
+
+        for plane in planes:
+            locations, deltas = plane.locations_belt_from_hours(self.calendar.total_hours())
+
+            # hack for fixing the size of cone plots in plotly
+            epsilon = 0.000001
+            v_last = [v + epsilon for v in locations[-1]]
+            locations.append(v_last)
+            deltas.append(deltas[-1])
+
+            asteroid_dict = {'x': [v[0] for v in locations], 'y': [v[1] for v in locations], 'z': [v[2] for v in locations],
+                             'u': [d[0] for d in deltas], 'v': [d[1] for d in deltas], 'w': [d[0] for d in deltas]}
+
+            df = pd.DataFrame(asteroid_dict)
+            df['color'] = plane.color if plane.color is not None else '#dddddd'
+            df['name'] = plane.name if plane.name is not None else 'None'
+            dfs.append(df)
+
+        return dfs
 
 
 class Plane:
@@ -47,7 +127,6 @@ class Plane:
         phi = (math.tau / self.period_in_hours) * (hours - self.phase)  # phi is in the xy-plane, and theta in the xz-plane. This follows the common notation in physics
         # theta = (math.tau / self.period_in_hours) * (hours - self.z_phase)
 
-
         # sample function for perfectly flat orbit
         x = self.amplitude * math.cos(phi)
         y = self.amplitude * math.sin(phi)
@@ -68,7 +147,6 @@ class Plane:
     def location_from_hours(self, hours: int) -> tuple[float, float, float]:
         """Return the location of the plane for the given time"""
         return self.orbit.location_from_hours(self._theta(hours))
-
 
     def __str__(self):
         return self.name
