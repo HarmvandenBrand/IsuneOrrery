@@ -8,7 +8,8 @@ import plotly.graph_objects as go
 from IsuneOrrery import Plane, ExtrusionPlane, AsteroidBeltPlane, Orbit, Orrery
 from IsuneCalendar import Calendar, Hour
 
-
+FIG_WIDTH_PIXELS = 1820
+FIG_HEIGHT_PIXELS = 1000
 SCENE_SIZE = 35
 
 TEST_ORBIT = Orbit(rotational_axis=[0.0, 0.0, 1.0], amplitude=20)
@@ -42,7 +43,7 @@ class IsuneDashApp:
             self.orrery.calendar = Calendar(years=years, months=months, days=days, hours=hours)
 
     def create_traces_from_orrery(self):
-        dfs_dict = self.orrery.get_dfs_dict()
+        dfs_dict = self.orrery.get_locations_as_dataframe_dict()
         simple_planes_dict = dfs_dict["simple planes"]
         extrusion_planes_dict = dfs_dict["extrusion planes"]
         asteroid_planes_dict = dfs_dict["asteroid planes"]
@@ -89,8 +90,19 @@ class IsuneDashApp:
             self.fig.layout.scene.zaxis.title = ""
             self.fig.layout.scene.zaxis.showbackground = True
 
-            # also an important line. First update will trigger camera position reset otherwise
-            self.fig.update_layout(width=1200, height=800, autosize=False)
+            # Remove unnecessary empty margins
+            self.fig.layout.margin = dict(l=0, r=0, t=0, b=0)
+
+            # Position the legend (= the list of traces) on top right corner ON TOP OF graph
+            self.fig.layout.legend.xref = 'paper'
+            self.fig.layout.legend.xanchor = 'right'
+            self.fig.layout.legend.x = 1
+            self.fig.layout.legend.yref = 'paper'
+            self.fig.layout.legend.yanchor = 'bottom'
+            self.fig.layout.legend.y = 0
+
+            # Set legend background color to about the same as the plot xy-plane, but with transparancy
+            self.fig.layout.legend.bgcolor = f'rgba({str(256-108)},{str(256-80)},{str(256-40)},0.25)'
 
         else:
             for trace in traces:
@@ -100,25 +112,31 @@ class IsuneDashApp:
 
 
     def get_app(self):
-
         # Initialize the app
         app = dash.Dash("Isune Astrolabe")
 
         self.calculate_fig()
 
         # App layout
-        app.layout = html.Div(
+        app.layout = html.Div(children=
         [
-            html.Div(id='current-date-div', children=str(self.orrery.calendar)),
-            # dcc.Loading(id="loading-screen-graph", type="cube", fullscreen=True, children=dcc.Graph(id='graph', figure=self.fig)),
-            dcc.Graph(id='graph', figure=self.fig),
-            dcc.Input(id='calendar-field', value='0000/01/01 00:00', type='text'),
-            html.Button(children='update', id='update-button'),
-            html.Button(children='-1', id='minus-1-hour-button'),
-            html.Button(children='+1', id='plus-1-hour-button'),
-            html.Button(children="►", id='play-button'),
-            dcc.Interval(id='interval-component', interval=0.5 * 1000, n_intervals=0, disabled=True)  # interval is in milliseconds, disabled=True so it begins inactive
+            dcc.Graph(id='graph', responsive=True, figure=self.fig, style={'width': '95vw', 'height': '90vh'}),
+
+            html.Div(
+                [
+                    dcc.Input(id='calendar-field', value='0000/01/01 00:00', type='text', size="12", style={'min-width':'10em%', 'height':'3em'}),
+                    html.Button(children='update', id='update-button'),
+                    html.Button(children='-1', id='minus-1-hour-button', style={'min-width':'3em'}),
+                    html.Button(children='+1', id='plus-1-hour-button', style={'min-width':'3em'}),
+                    html.Button(children="►", id='play-button', style={'min-width':'3em'}),
+                    dcc.Interval(id='interval-component', interval=0.5 * 1000, n_intervals=0, disabled=True)  # interval is in milliseconds, disabled=True so it begins inactive
+                    # ])
+                ], style={'display': 'flex', 'justify-content': 'center'}),
+
         ])
+
+        self.calculate_fig()
+
 
 
         @app.callback(
@@ -132,6 +150,7 @@ class IsuneDashApp:
             ]
         )
         def toggle_interval(button_clicks, disabled_state):
+            """Toggles the icon on the autoplay/pause button."""
             if button_clicks is not None and button_clicks > 0:
                 if disabled_state:
                     return not disabled_state, "||"
@@ -143,7 +162,7 @@ class IsuneDashApp:
         # Callback for the manipulation of buttons
         @app.callback(
             Output('graph', 'figure'),
-            Output('current-date-div', 'children'),
+            Output('calendar-field', 'value'),
             [
                 Input('update-button', 'n_clicks'),
                 Input('minus-1-hour-button', 'n_clicks'),
@@ -155,7 +174,8 @@ class IsuneDashApp:
             ]
         )
         def update_figure(n_clicks_update, n_clicks_minus_1, n_clicks_plus_1, n_intervals, value):
-
+            """Main callback function to update the graph. Should be called whenever the figure should be updated, which is
+            at least whenever the calendar date is channged."""
             if n_clicks_update is None and n_clicks_minus_1 is None and n_clicks_plus_1 is None and n_intervals is None:
                 return dash.no_update
             else:
@@ -170,7 +190,6 @@ class IsuneDashApp:
                     self.orrery.calendar = self.orrery.calendar + Hour(1)
                 elif triggered_id == 'interval-component':
                     self.orrery.calendar = self.orrery.calendar + Hour(1)
-
 
                 self.calculate_fig()
 

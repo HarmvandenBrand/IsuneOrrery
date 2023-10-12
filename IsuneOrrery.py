@@ -21,7 +21,7 @@ class Orrery:
         self._vilron = Plane("Vil'ron", orbit=None, period_in_hours=10, phase=0.0, color="#bbbbee", size=45)
 
 
-    def get_dfs_dict(self) -> dict:
+    def get_locations_as_dataframe_dict(self) -> dict:
 
         if self.calendar < Calendar(0, 1, 1, 0):
             # Before the zero date display only Venron
