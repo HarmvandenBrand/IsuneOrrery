@@ -120,7 +120,7 @@ class IsuneDashApp:
         # App layout
         app.layout = html.Div(children=
         [
-            dcc.Graph(id='graph', responsive=True, figure=self.fig, style={'width': '95vw', 'height': '90vh'}),
+            dcc.Graph(id='graph', responsive=True, figure=self.fig, style={'width': '95vw', 'height': '85vh'}),
 
             html.Div(
                 [
