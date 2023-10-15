@@ -122,12 +122,6 @@ class Calendar:
         return (self.days + self.months * Calendar.NUM_DAYS_IN_MONTH) % Calendar.NUM_DAYS_IN_WEEK
 
     def total_hours(self) -> int:
-        # hours = self.hours
-        # hours += self.days * Calendar.NUM_HOURS_IN_DAY
-        # hours += self.months * Calendar.NUM_DAYS_IN_MONTH * Calendar.NUM_HOURS_IN_DAY
-        # hours += self.years * Calendar.NUM_MONTHS_IN_YEAR * Calendar.NUM_DAYS_IN_MONTH * Calendar.NUM_HOURS_IN_DAY
-        # return hours
-
         return ((self.years * Calendar.NUM_MONTHS_IN_YEAR + self.months) * Calendar.NUM_DAYS_IN_MONTH + self.days) * Calendar.NUM_HOURS_IN_DAY + self.hours
 
 
