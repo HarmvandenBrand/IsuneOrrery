@@ -56,7 +56,7 @@ class IsuneDashApp:
         if "extrusion planes" in dfs_dict.keys():
             for key in dfs_dict["extrusion planes"].keys():
                 df = dfs_dict["extrusion planes"][key]
-                hover_template = '%{text}<extra></extra>'
+                hover_template = '<b>%{text}</b><extra></extra>'
                 traces.append(go.Scatter3d(x=df['x'], y=df['y'], z=df['z'], text=df['name'],
                                            name=key, mode='lines', line=dict(width=df['size'][0]*UNIFORM_SIZE_FACTOR, color=df['color'][0]), opacity=SLICE_ORBIT_OPACITY, hovertemplate=hover_template))
 
@@ -64,7 +64,7 @@ class IsuneDashApp:
             for key in dfs_dict["asteroid planes"].keys():
                 df = dfs_dict["asteroid planes"][key]
                 colorscale = [[0, '#bff0fc'], [1, '#ffffff']]
-                hover_template = f'{key}<extra></extra>'
+                hover_template = f'<b>{key}</b><extra></extra>'
                 traces.append(go.Cone(x=df['x'], y=df['y'], z=df['z'], u=df['u'], v=df['v'], w=df['w'], text=df['name'][0],
                                       name=key, sizemode='absolute', sizeref=400000, colorscale=colorscale, showscale=False, hovertemplate=hover_template, showlegend=True))
 
