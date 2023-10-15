@@ -49,18 +49,24 @@ class IsuneDashApp:
         if "simple planes" in dfs_dict.keys():
             for key in dfs_dict["simple planes"].keys():
                 df = dfs_dict["simple planes"][key]
-                traces.append(go.Scatter3d(x=df['x'], y=df['y'], z=df['z'], text=df['name'], mode='markers', marker=dict(color=df['color'], size=df['size']*UNIFORM_SIZE_FACTOR), opacity=0.9, name=key))
+                hover_template = '<b>%{text}</b><br>' + str(key) + '<extra></extra>'
+                traces.append(go.Scatter3d(x=df['x'], y=df['y'], z=df['z'], text=df['name'],
+                                           name=key, mode='markers', marker=dict(color=df['color'], size=df['size']*UNIFORM_SIZE_FACTOR), opacity=0.9, hovertemplate=hover_template))
 
         if "extrusion planes" in dfs_dict.keys():
             for key in dfs_dict["extrusion planes"].keys():
                 df = dfs_dict["extrusion planes"][key]
-                traces.append(go.Scatter3d(x=df['x'], y=df['y'], z=df['z'], text=df['name'], mode='lines', line=dict(width=df['size'][0]*UNIFORM_SIZE_FACTOR, color=df['color'][0]), name=df['name'][0], opacity=SLICE_ORBIT_OPACITY, hovertemplate='%{text}<extra></extra>'))
+                hover_template = '%{text}<extra></extra>'
+                traces.append(go.Scatter3d(x=df['x'], y=df['y'], z=df['z'], text=df['name'],
+                                           name=key, mode='lines', line=dict(width=df['size'][0]*UNIFORM_SIZE_FACTOR, color=df['color'][0]), opacity=SLICE_ORBIT_OPACITY, hovertemplate=hover_template))
 
         if "asteroid planes" in dfs_dict.keys():
             for key in dfs_dict["asteroid planes"].keys():
                 df = dfs_dict["asteroid planes"][key]
                 colorscale = [[0, '#bff0fc'], [1, '#ffffff']]
-                traces.append(go.Cone(x=df['x'], y=df['y'], z=df['z'], u=df['u'], v=df['v'], w=df['w'], text=df['name'][0], name=df['name'][0], sizemode='absolute', sizeref=400000, colorscale=colorscale, showscale=False, hovertemplate=f'{df["name"][0]}<extra></extra>', showlegend=True))
+                hover_template = f'{key}<extra></extra>'
+                traces.append(go.Cone(x=df['x'], y=df['y'], z=df['z'], u=df['u'], v=df['v'], w=df['w'], text=df['name'][0],
+                                      name=key, sizemode='absolute', sizeref=400000, colorscale=colorscale, showscale=False, hovertemplate=hover_template, showlegend=True))
 
         return traces
 
