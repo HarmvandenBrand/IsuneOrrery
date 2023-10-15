@@ -24,8 +24,8 @@ class Orrery:
     def get_locations_as_dataframe_dict(self) -> dict:
 
         if self.calendar < Calendar(0, 1, 1, 0):
-            # Before the zero date display only Venron
-            return {"simple planes": self._simple_planes_to_df([self.sun_plane])}
+            # Before the zero date display only Vil'ron
+            return {"simple planes": {self._vilron.name: self._simple_planes_to_df([self._vilron])}}
         else:
             sun_plane_df = self._simple_planes_to_df([self.sun_plane])
             material_planes_df = self._simple_planes_to_df(self.material_planes)
@@ -251,7 +251,7 @@ class Orbit:
         return V[0], V[1]
 
     def _create_orbit_vectors_gramschmidt(self, rotational_axis_vector: np.ndarray):
-        """Gram-Schmidt procedure to generate orthogonal vectors
+        """Deprecated, use _create_orbit_vectors instead. Gram-Schmidt procedure to generate orthogonal vectors
         (see https://stackoverflow.com/questions/33658620/generating-two-orthogonal-vectors-that-are-orthogonal-to-a-particular-direction)"""
         a = np.random.randn(3)
         a -= a.dot(rotational_axis_vector) * rotational_axis_vector

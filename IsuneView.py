@@ -44,24 +44,23 @@ class IsuneDashApp:
 
     def create_traces_from_orrery(self):
         dfs_dict = self.orrery.get_locations_as_dataframe_dict()
-        simple_planes_dict = dfs_dict["simple planes"]
-        extrusion_planes_dict = dfs_dict["extrusion planes"]
-        asteroid_planes_dict = dfs_dict["asteroid planes"]
-
         traces = []
 
-        for key in simple_planes_dict.keys():
-            df = simple_planes_dict[key]
-            traces.append(go.Scatter3d(x=df['x'], y=df['y'], z=df['z'], text=df['name'], mode='markers', marker=dict(color=df['color'], size=df['size']*UNIFORM_SIZE_FACTOR), opacity=0.9, name=key))
+        if "simple planes" in dfs_dict.keys():
+            for key in dfs_dict["simple planes"].keys():
+                df = dfs_dict["simple planes"][key]
+                traces.append(go.Scatter3d(x=df['x'], y=df['y'], z=df['z'], text=df['name'], mode='markers', marker=dict(color=df['color'], size=df['size']*UNIFORM_SIZE_FACTOR), opacity=0.9, name=key))
 
-        for key in extrusion_planes_dict.keys():
-            df = extrusion_planes_dict[key]
-            traces.append(go.Scatter3d(x=df['x'], y=df['y'], z=df['z'], text=df['name'], mode='lines', line=dict(width=df['size'][0]*UNIFORM_SIZE_FACTOR, color=df['color'][0]), name=df['name'][0], opacity=SLICE_ORBIT_OPACITY, hovertemplate='%{text}<extra></extra>'))
+        if "extrusion planes" in dfs_dict.keys():
+            for key in dfs_dict["extrusion planes"].keys():
+                df = dfs_dict["extrusion planes"][key]
+                traces.append(go.Scatter3d(x=df['x'], y=df['y'], z=df['z'], text=df['name'], mode='lines', line=dict(width=df['size'][0]*UNIFORM_SIZE_FACTOR, color=df['color'][0]), name=df['name'][0], opacity=SLICE_ORBIT_OPACITY, hovertemplate='%{text}<extra></extra>'))
 
-        for key in asteroid_planes_dict.keys():
-            df = asteroid_planes_dict[key]
-            colorscale = [[0, '#bff0fc'], [1, '#ffffff']]
-            traces.append(go.Cone(x=df['x'], y=df['y'], z=df['z'], u=df['u'], v=df['v'], w=df['w'], text=df['name'][0], name=df['name'][0], sizemode='absolute', sizeref=400000, colorscale=colorscale, showscale=False, hovertemplate=f'{df["name"][0]}<extra></extra>', showlegend=True))
+        if "asteroid planes" in dfs_dict.keys():
+            for key in dfs_dict["asteroid planes"].keys():
+                df = dfs_dict["asteroid planes"][key]
+                colorscale = [[0, '#bff0fc'], [1, '#ffffff']]
+                traces.append(go.Cone(x=df['x'], y=df['y'], z=df['z'], u=df['u'], v=df['v'], w=df['w'], text=df['name'][0], name=df['name'][0], sizemode='absolute', sizeref=400000, colorscale=colorscale, showscale=False, hovertemplate=f'{df["name"][0]}<extra></extra>', showlegend=True))
 
         return traces
 
@@ -105,8 +104,7 @@ class IsuneDashApp:
             self.fig.layout.legend.bgcolor = f'rgba({str(256-108)},{str(256-80)},{str(256-40)},0.25)'
 
         else:
-            for trace in traces:
-                self.fig = self.fig.update_traces(trace, selector=dict(name=trace.name), overwrite=False)
+            self.fig = self.fig.update(dict(data=traces), overwrite=True)
 
         return self.fig
 
