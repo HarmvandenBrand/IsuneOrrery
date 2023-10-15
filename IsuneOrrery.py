@@ -223,9 +223,36 @@ class Orbit:
 
         self._orthogonal_axis_a, self._orthogonal_axis_b = self._create_orbit_vectors(self.rotational_axis)
 
-
     def _create_orbit_vectors(self, rotational_axis_vector: np.ndarray):
-        # Gram-Schmidt procedure to generate orthogonal vectors (see https://stackoverflow.com/questions/33658620/generating-two-orthogonal-vectors-that-are-orthogonal-to-a-particular-direction)
+        """Create orbit vectors a and b that are perpendicular to the rotational_axis using the Rodrigues rotation formula.
+        The orbit vectors are used to calculate the location of a plane in 3D-space in other methods."""
+
+        # Construct the xyz unit vectors in R3
+        V = np.asarray([(1, 0, 0), (0, 1, 0), (0, 0, 1)], dtype=float)
+
+        # Interpret the rotational axis as a rotated z-axis of the unit vectors. Calculate cross-product k between the two.
+        r = rotational_axis_vector / np.linalg.norm(rotational_axis_vector)
+
+        # if r == (0,0,1), k will be (0,0,0). Normalizing k then results in NaNs. Return unchanged unit vectors instead.
+        if np.array_equal(r, np.asarray((0, 0, 1), dtype=float)):
+            return V[0], V[1]
+
+        k = np.cross(V[2], r)
+        k /= np.linalg.norm(k)
+
+        # Calculate angle theta between the z-unit vector and the rotational axis.
+        theta = np.arccos(np.dot(V[2], r) / (np.linalg.norm(V[2]) * np.linalg.norm(r)))
+
+        # Use Rodrigues' rotation formula to calculate the rotated vector for every one of the unit vectors
+        for i, v in enumerate(V):
+            V[i] = v * np.cos(theta) + np.cross(k, v) * np.sin(theta) + k * np.dot(k, v) * (1 - np.cos(theta))
+            V[i] /= np.linalg.norm(V[i])
+
+        return V[0], V[1]
+
+    def _create_orbit_vectors_gramschmidt(self, rotational_axis_vector: np.ndarray):
+        """Gram-Schmidt procedure to generate orthogonal vectors
+        (see https://stackoverflow.com/questions/33658620/generating-two-orthogonal-vectors-that-are-orthogonal-to-a-particular-direction)"""
         a = np.random.randn(3)
         a -= a.dot(rotational_axis_vector) * rotational_axis_vector
         a = a / np.linalg.norm(a)
