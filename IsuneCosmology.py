@@ -16,7 +16,7 @@ ETHEREAL_PLANE_ORBIT = Orbit(rotational_axis=[-1.0, 0.0, 1.10], amplitude=INNER_
 OUTER_PLANES_ORBIT = Orbit(rotational_axis=[1.0, 1.0, 1.10], amplitude=OUTER_PLANES_AMPLITUDE)
 
 # Offset in phase used to define the position of planes at the starting date of the calendar
-GLOBAL_HOURS_OFFSET = 60
+GLOBAL_HOURS_OFFSET = -60
 
 # arcane core is at (0,0,0)
 # reference plane is the (x,y) plane and is defined as the ecliptic plane for all material planes
