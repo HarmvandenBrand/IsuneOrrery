@@ -16,8 +16,7 @@ from IsuneView import IsuneDashApp
 
 def initialize():
 
-    planes = IsuneCosmology.get_isune_cosmology()
-    isune_orrery = Orrery(*planes)
+    isune_orrery = IsuneCosmology.get_isune_cosmology()
     isune_dash = IsuneDashApp(isune_orrery)
     app = isune_dash.get_app()
 

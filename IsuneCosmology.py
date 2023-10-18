@@ -1,6 +1,4 @@
-from IsuneOrrery import Plane, ExtrusionPlane, AsteroidBeltPlane, Orbit
-
-
+from IsuneOrrery import Plane, ExtrusionPlane, AsteroidBeltPlane, Orbit, Orrery
 
 INNER_PLANES_AMPLITUDE = 10
 OUTER_PLANES_AMPLITUDE = 30
@@ -17,7 +15,8 @@ FEYFELL_ORBIT = Orbit(rotational_axis=[1.0, 0.0, 0.90], amplitude=INNER_PLANES_A
 ETHEREAL_PLANE_ORBIT = Orbit(rotational_axis=[-1.0, 0.0, 1.10], amplitude=INNER_PLANES_AMPLITUDE)
 OUTER_PLANES_ORBIT = Orbit(rotational_axis=[1.0, 1.0, 1.10], amplitude=OUTER_PLANES_AMPLITUDE)
 
-
+# Offset in phase used to define the position of planes at the starting date of the calendar
+GLOBAL_HOURS_OFFSET = 60
 
 # arcane core is at (0,0,0)
 # reference plane is the (x,y) plane and is defined as the ecliptic plane for all material planes
@@ -70,6 +69,18 @@ def get_ethereal_plane() -> AsteroidBeltPlane:
     return ethereal_plane
 
 
+def apply_initial_phase_offset(planes: list, offset_hours: int):
+    planes_flattened = []
+
+    for p in planes:
+        if type(p) is list:
+            planes_flattened.extend(p)
+        else:
+            planes_flattened.append(p)
+
+    for p in planes_flattened:
+        p.phase -= offset_hours / p.period_in_hours
+
 def get_isune_cosmology():
 
     arcane_core = Plane("Arcane Core", orbit=None, period_in_hours=1, phase=0.0, color="#ffff99", size=25)
@@ -80,4 +91,6 @@ def get_isune_cosmology():
 
     planes = [arcane_core, material_planes, feyfell_planes, [ethereal_plane], outer_planes]
 
-    return planes
+    apply_initial_phase_offset(planes, GLOBAL_HOURS_OFFSET)
+
+    return Orrery(*planes)

@@ -37,6 +37,7 @@ class Orrery:
                         "extrusion planes": {"Feywild": feywild_df, "Shadowfell": shadowfell_df},
                         "asteroid planes": {"Ethereal Plane": ethereal_plane_df}}
 
+
             return dfs_dict
 
     def _simple_planes_to_df(self, planes: list['Plane']) -> pd.DataFrame:
@@ -99,7 +100,7 @@ class Plane:
         self.name = name
         self.orbit = orbit if orbit is not None else Orbit.NULL_ORBIT
         self.period_in_hours = period_in_hours
-        self.phase = period_in_hours * phase  # phase is given as portion of single orbit and should be in [0, 1]
+        self.phase = phase  # phase is given as portion of single orbit and should be in [0, 1]
         self.color = color
         self.size = size
 
@@ -121,28 +122,8 @@ class Plane:
         loc_other = other.location_at_date(date)
         return math.dist(loc_self, loc_other)
 
-    def location_from_hours_old(self, hours: int) -> tuple[float, float, float]:
-        """input in uren"""
-
-        phi = (math.tau / self.period_in_hours) * (hours - self.phase)  # phi is in the xy-plane, and theta in the xz-plane. This follows the common notation in physics
-        # theta = (math.tau / self.period_in_hours) * (hours - self.z_phase)
-
-        # sample function for perfectly flat orbit
-        x = self.amplitude * math.cos(phi)
-        y = self.amplitude * math.sin(phi)
-        # z = self.amplitude * math.sin(theta) * math.cos(self.inclination)
-        z = 0.0
-
-        # alternatively:
-            # f(t) = a * cos (ω t + ϕ)
-            # met ω > 0 de hoekfrequentie,
-            # a > 0 de amplitude,
-            # ϕ de fase
-
-        return x, y, z
-
     def _theta(self, hours: int | float) -> float:
-        return (math.tau / self.period_in_hours) * (hours - self.phase)
+        return (math.tau / self.period_in_hours) * (hours - self.phase * self.period_in_hours)
 
     def location_from_hours(self, hours: int) -> tuple[float, float, float]:
         """Return the location of the plane for the given time"""

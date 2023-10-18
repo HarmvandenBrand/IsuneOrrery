@@ -117,9 +117,8 @@ class IsuneDashApp:
 
     def get_app(self):
         # Initialize the app
-        app = dash.Dash("Isune Astrolabe")
+        app = dash.Dash("Isune Orrery")
         app.title = "Isune Orrery"
-
 
         self.calculate_fig()
 
