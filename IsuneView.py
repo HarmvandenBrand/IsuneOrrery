@@ -2,6 +2,7 @@ import dash
 from dash import dcc
 from dash import html
 from dash.dependencies import Output, State, Input
+import dash_bootstrap_components as dbc
 
 import plotly.graph_objects as go
 
@@ -25,22 +26,6 @@ class IsuneDashApp:
         self.orrery = orrery
         self.fig = None
 
-    def parse_calendar(self, calendar_string: str) -> Calendar:
-        if calendar_string is None:
-            raise ValueError("Invalid calendar value")
-        else:
-            values = calendar_string.split('/')
-
-            # accept number of hours from zero as valid input for debugging purposes
-            if len(values) == 1:
-                return Calendar(0, 1, 1, int(values[0]))
-
-            years = int(values[0])
-            months = int(values[1])
-            days = int(values[2].split(' ')[0])
-            hours = int(values[2].split(' ')[1].split(':')[0])
-
-            self.orrery.calendar = Calendar(years=years, months=months, days=days, hours=hours)
 
     def create_traces_from_orrery(self):
         dfs_dict = self.orrery.get_locations_as_dataframe_dict()
@@ -117,7 +102,7 @@ class IsuneDashApp:
 
     def get_app(self):
         # Initialize the app
-        app = dash.Dash("Isune Orrery")
+        app = dash.Dash("Isune Orrery", external_stylesheets=[dbc.themes.BOOTSTRAP])
         app.title = "Isune Orrery"
 
         self.calculate_fig()
@@ -126,6 +111,16 @@ class IsuneDashApp:
         app.layout = html.Div(children=
         [
             dcc.Graph(id='graph', responsive=True, figure=self.fig, style={'width': '95vw', 'height': '85vh'}),
+
+            dbc.Alert(
+                "Invalid date",
+                id="invalid-date-toast",
+                duration=4000,
+                fade=True,
+                is_open=False,
+                color="danger",
+                style={"position": "fixed", "right": "50%", "bottom": "15%"}
+            ),
 
             html.Div(
                 [
@@ -143,16 +138,11 @@ class IsuneDashApp:
         self.calculate_fig()
 
 
-
         @app.callback(
             Output('interval-component', 'disabled'),
             Output('play-button', 'children'),
-            [
-                Input('play-button', 'n_clicks')
-            ],
-            [
-                State('interval-component', 'disabled')
-            ]
+            [Input('play-button', 'n_clicks')],
+            [State('interval-component', 'disabled')]
         )
         def toggle_interval(button_clicks, disabled_state):
             """Toggles the icon on the autoplay/pause button."""
@@ -168,6 +158,7 @@ class IsuneDashApp:
         @app.callback(
             Output('graph', 'figure'),
             Output('calendar-field', 'value'),
+            Output('invalid-date-toast', 'is_open'),
             [
                 Input('update-button', 'n_clicks'),
                 Input('minus-1-hour-button', 'n_clicks'),
@@ -175,10 +166,11 @@ class IsuneDashApp:
                 Input('interval-component', 'n_intervals')
             ],
             [
-                State('calendar-field', 'value')
+                State('calendar-field', 'value'),
+                State('invalid-date-toast', 'is_open')
             ]
         )
-        def update_figure(n_clicks_update, n_clicks_minus_1, n_clicks_plus_1, n_intervals, value):
+        def update_figure(n_clicks_update, n_clicks_minus_1, n_clicks_plus_1, n_intervals, value, is_open):
             """Main callback function to update the graph. Should be called whenever the figure should be updated, which is
             at least whenever the calendar date is channged."""
             if n_clicks_update is None and n_clicks_minus_1 is None and n_clicks_plus_1 is None and n_intervals is None:
@@ -188,7 +180,10 @@ class IsuneDashApp:
                 triggered_id = dash.ctx.triggered_id
 
                 if triggered_id == 'update-button':
-                    self.parse_calendar(value)
+                    if Calendar.is_valid_calendar_string(value):
+                        self.orrery.calendar = Calendar.parse_calendar_string(value)
+                    else:
+                        is_open = not is_open
                 elif triggered_id == 'minus-1-hour-button':
                     self.orrery.calendar = self.orrery.calendar - Hour(1)
                 elif triggered_id == 'plus-1-hour-button':
@@ -198,6 +193,6 @@ class IsuneDashApp:
 
                 self.calculate_fig()
 
-                return self.fig, str(self.orrery.calendar)
+                return self.fig, str(self.orrery.calendar), is_open
 
         return app

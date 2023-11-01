@@ -1,3 +1,4 @@
+import calendar
 import math
 
 
@@ -99,6 +100,32 @@ class Calendar:
                 return self.months < other.months
         else:
             return self.years < other.years
+
+    @classmethod
+    def is_valid_calendar_string(cls, input_str) -> bool:
+        try:
+            values = input_str.split('/')
+
+            years = int(values[0])
+            months = int(values[1])
+            days = int(values[2].split(' ')[0])
+            hours = int(values[2].split(' ')[1].split(':')[0])
+
+            return 0 < months <= cls.NUM_MONTHS_IN_YEAR and 0 < days <= cls.NUM_DAYS_IN_MONTH and 0 <= hours < cls.NUM_HOURS_IN_DAY
+
+        except:
+            return False
+
+    @classmethod
+    def parse_calendar_string(cls, input_str) -> 'Calendar':
+        values = input_str.split('/')
+
+        years = int(values[0])
+        months = int(values[1])
+        days = int(values[2].split(' ')[0])
+        hours = int(values[2].split(' ')[1].split(':')[0])
+
+        return Calendar(years, months, days, hours)
 
     def month_name(self) -> str:
         return Calendar.MONTH_NAMES[self.months]
